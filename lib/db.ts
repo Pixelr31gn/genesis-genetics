@@ -1,6 +1,13 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL!);
+let cachedSql: NeonQueryFunction<false, false> | null = null;
+
+function sql(...args: Parameters<NeonQueryFunction<false, false>>) {
+  if (!cachedSql) {
+    cachedSql = neon(process.env.DATABASE_URL!);
+  }
+  return cachedSql(...args);
+}
 
 export type Product = {
   id: number;

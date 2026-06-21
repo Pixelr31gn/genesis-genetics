@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import ProductGrid from "./components/ProductGrid";
 import ProductGridSkeleton from "./components/ProductGridSkeleton";
 
+export const dynamic = "force-dynamic";
+
 const TRUST_ITEMS = [
   { label: "99%+ Purity Verified", Icon: IconPurity },
   { label: "HPLC Tested", Icon: IconFlask },
