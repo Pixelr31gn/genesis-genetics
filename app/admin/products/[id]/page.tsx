@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
-import { getProductById } from "@/lib/db";
+import { getProductById, getProducts, getRelatedProductIds } from "@/lib/db";
 import ProductForm from "../../ProductForm";
 import { deleteProductAction, updateProductAction } from "../../actions";
 
@@ -22,6 +22,11 @@ export default async function EditProductPage({
   if (!product) {
     notFound();
   }
+
+  const [allProducts, selectedRelatedIds] = await Promise.all([
+    getProducts(),
+    getRelatedProductIds(product.id),
+  ]);
 
   return (
     <main className="bg-black text-white min-h-screen px-6 py-12">
@@ -48,6 +53,8 @@ export default async function EditProductPage({
             action={updateProductAction}
             product={product}
             submitLabel="Save Changes"
+            allProducts={allProducts}
+            selectedRelatedIds={selectedRelatedIds}
           />
         </div>
       </div>

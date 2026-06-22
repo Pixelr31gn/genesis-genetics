@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { getProducts } from "@/lib/db";
 import ProductForm from "../ProductForm";
 import { createProductAction } from "../actions";
 
@@ -11,6 +12,8 @@ export default async function NewProductPage() {
   if (!verifySessionToken(token)) {
     redirect("/admin/login");
   }
+
+  const allProducts = await getProducts();
 
   return (
     <main className="bg-black text-white min-h-screen px-6 py-12">
@@ -22,7 +25,11 @@ export default async function NewProductPage() {
         <h1 className="text-2xl font-light mt-6 mb-8">Add Product</h1>
 
         <div className="border border-white/10 rounded-2xl bg-white/[0.03] p-6">
-          <ProductForm action={createProductAction} submitLabel="Add Product" />
+          <ProductForm
+            action={createProductAction}
+            submitLabel="Add Product"
+            allProducts={allProducts}
+          />
         </div>
       </div>
     </main>

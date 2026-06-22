@@ -5,11 +5,16 @@ export default function ProductForm({
   action,
   product,
   submitLabel,
+  allProducts,
+  selectedRelatedIds = [],
 }: {
   action: (formData: FormData) => void;
   product?: Product;
   submitLabel: string;
+  allProducts: Product[];
+  selectedRelatedIds?: number[];
 }) {
+  const candidates = allProducts.filter((p) => p.id !== product?.id);
   return (
     <form action={action} className="space-y-5">
       {product ? <input type="hidden" name="id" value={product.id} /> : null}
@@ -86,6 +91,32 @@ export default function ProductForm({
           defaultValue={product?.description ?? ""}
           className="field resize-none"
         />
+      </Field>
+
+      <Field label="Recommended With (Complete the Stack)">
+        {candidates.length === 0 ? (
+          <p className="text-sm text-white/30">
+            Add more products to start curating a stack.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-white/10 rounded-xl p-3">
+            {candidates.map((p) => (
+              <label
+                key={p.id}
+                className="flex items-center gap-2 text-sm text-white/70"
+              >
+                <input
+                  type="checkbox"
+                  name="relatedIds"
+                  value={p.id}
+                  defaultChecked={selectedRelatedIds.includes(p.id)}
+                  className="accent-[#00FF41]"
+                />
+                {p.name}
+              </label>
+            ))}
+          </div>
+        )}
       </Field>
 
       <button

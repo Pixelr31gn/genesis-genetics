@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
-import { createProduct, deleteProduct, updateProduct } from "@/lib/db";
+import {
+  createProduct,
+  deleteProduct,
+  setRelatedProducts,
+  updateOrderStatus,
+  updateProduct,
+} from "@/lib/db";
 import type { ImageInput, ProductInput } from "@/lib/db";
 
 async function requireSession() {
@@ -34,10 +40,15 @@ async function readImageInput(formData: FormData): Promise<ImageInput | null> {
   return { data: buffer, type: file.type || "application/octet-stream" };
 }
 
+function readRelatedIds(formData: FormData): number[] {
+  return formData.getAll("relatedIds").map((v) => Number(v));
+}
+
 export async function createProductAction(formData: FormData) {
   await requireSession();
   const image = await readImageInput(formData);
-  await createProduct(readProductInput(formData), image);
+  const product = await createProduct(readProductInput(formData), image);
+  await setRelatedProducts(product.id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");
   redirect("/admin");
@@ -48,6 +59,7 @@ export async function updateProductAction(formData: FormData) {
   const id = Number(formData.get("id"));
   const image = await readImageInput(formData);
   await updateProduct(id, readProductInput(formData), image);
+  await setRelatedProducts(id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");
   redirect("/admin");
@@ -59,6 +71,14 @@ export async function deleteProductAction(formData: FormData) {
   await deleteProduct(id);
   revalidatePath("/");
   revalidatePath("/admin");
+}
+
+export async function updateOrderStatusAction(formData: FormData) {
+  await requireSession();
+  const id = Number(formData.get("id"));
+  const status = String(formData.get("status"));
+  await updateOrderStatus(id, status);
+  revalidatePath("/admin/orders");
 }
 
 export async function logout() {

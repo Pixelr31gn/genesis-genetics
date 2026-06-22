@@ -1,3 +1,5 @@
+import CartIcon from "./CartIcon";
+
 export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/10">
@@ -25,9 +27,12 @@ export default function Header() {
           </a>
         </nav>
 
-        <button className="px-4 py-2 border border-[#00FF41]/30 text-[#00FF41] text-sm rounded-full hover:bg-[#00FF41] hover:text-black transition">
-          Request Access
-        </button>
+        <div className="flex items-center gap-3">
+          <CartIcon />
+          <button className="px-4 py-2 border border-[#00FF41]/30 text-[#00FF41] text-sm rounded-full hover:bg-[#00FF41] hover:text-black transition">
+            Request Access
+          </button>
+        </div>
       </div>
     </header>
   );
