@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   motion,
+  useInView,
   useMotionTemplate,
   useMotionValue,
   useSpring,
@@ -27,6 +28,10 @@ export default function ProductCard({
   const cart = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const isScrollActive = useInView(ref, {
+    amount: 0.5,
+    margin: "-20% 0px -20% 0px",
+  });
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -121,6 +126,22 @@ export default function ProductCard({
             style={{ background: sheen }}
           />
 
+          {/* mobile scroll-triggered edge glow */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-30 rounded-[28px] border md:hidden"
+            initial={false}
+            animate={{
+              borderColor: isScrollActive
+                ? "rgba(0,255,65,0.65)"
+                : "rgba(0,255,65,0)",
+              boxShadow: isScrollActive
+                ? "0 0 18px 2px rgba(0,255,65,0.45), inset 0 0 16px rgba(0,255,65,0.22)"
+                : "0 0 0px 0px rgba(0,255,65,0)",
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+
           {/* IMAGE */}
           <div className="relative aspect-[4/5] overflow-hidden">
             {product.image_type ? (
@@ -136,6 +157,9 @@ export default function ProductCard({
             <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 
             <div className="absolute top-5 left-5 flex flex-col items-start gap-2">
+              <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-black/70 border border-white/10 rounded-full text-white/70">
+                {product.category}
+              </span>
               {hasDiscount ? (
                 <motion.span
                   animate={{ scale: [1, 1.07, 1] }}
@@ -145,9 +169,6 @@ export default function ProductCard({
                   -{product.discount_percent}% OFF
                 </motion.span>
               ) : null}
-              <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-black/70 border border-white/10 rounded-full text-white/70">
-                {product.category}
-              </span>
             </div>
 
             <div className="absolute top-5 right-5">
