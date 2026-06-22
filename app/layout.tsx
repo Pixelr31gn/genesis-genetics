@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Genesis Genetics — Precision Without Compromise",
   description:
     "Pharmaceutical-grade research compounds manufactured under strict analytical validation standards.",
+  other: {
+    "msvalidate.01": "FCB6AEDB25A5F2C35FD1B6A938DEA431",
+  },
 };
 
 export default function RootLayout({
