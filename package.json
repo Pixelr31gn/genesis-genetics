@@ -10,11 +10,13 @@
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
     "db:migrate-images": "node --env-file=.env.local scripts/migrate-image-storage.mjs",
     "db:migrate-cart": "node --env-file=.env.local scripts/add-cart-checkout.mjs",
-    "db:migrate-sort-discount": "node --env-file=.env.local scripts/add-sort-and-discount.mjs"
+    "db:migrate-sort-discount": "node --env-file=.env.local scripts/add-sort-and-discount.mjs",
+    "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "framer-motion": "^12.40.0",
+    "marked": "^18.0.5",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4"

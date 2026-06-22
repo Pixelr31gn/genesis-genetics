@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import ProductCard from "../../components/ProductCard";
 import AddToCartControls from "./AddToCartControls";
-import { getProductBySlug, getRelatedProducts } from "@/lib/db";
+import { getPostsForProduct, getProductBySlug, getRelatedProducts } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,10 @@ export default async function CompoundPage({
     notFound();
   }
 
-  const related = await getRelatedProducts(product.id);
+  const [related, researchPosts] = await Promise.all([
+    getRelatedProducts(product.id),
+    getPostsForProduct(product.id),
+  ]);
 
   const hasDiscount = product.discount_percent > 0;
   const discountedPrice = hasDiscount
@@ -122,6 +126,25 @@ export default async function CompoundPage({
           </div>
         </div>
       </section>
+
+      {researchPosts.length > 0 ? (
+        <section className="px-6 pb-16 max-w-6xl mx-auto">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#00FF41]/60 mb-4">
+            Research &amp; Literature
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {researchPosts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/research/${post.slug}`}
+                className="px-4 py-2 rounded-full border border-white/15 text-sm text-white/70 hover:border-[#00FF41]/40 hover:text-[#00FF41] transition"
+              >
+                {post.title} →
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {related.length > 0 ? (
         <section className="px-6 pb-28 max-w-6xl mx-auto">

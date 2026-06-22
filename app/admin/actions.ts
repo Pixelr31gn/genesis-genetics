@@ -5,14 +5,19 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import {
+  createPost,
   createProduct,
+  deletePost,
   deleteProduct,
   setProductOrder,
+  setProductsForPost,
+  setRelatedPosts,
   setRelatedProducts,
   updateOrderStatus,
+  updatePost,
   updateProduct,
 } from "@/lib/db";
-import type { ImageInput, ProductInput } from "@/lib/db";
+import type { ImageInput, PostInput, ProductInput } from "@/lib/db";
 
 async function requireSession() {
   const cookieStore = await cookies();
@@ -45,6 +50,25 @@ async function readImageInput(formData: FormData): Promise<ImageInput | null> {
 
 function readRelatedIds(formData: FormData): number[] {
   return formData.getAll("relatedIds").map((v) => Number(v));
+}
+
+function readPostInput(formData: FormData): PostInput {
+  return {
+    title: String(formData.get("title") || ""),
+    excerpt: String(formData.get("excerpt") || ""),
+    content: String(formData.get("content") || ""),
+    meta_description: String(formData.get("meta_description") || ""),
+    cluster: String(formData.get("cluster") || "General"),
+    published: formData.get("published") === "on",
+  };
+}
+
+function readProductIds(formData: FormData): number[] {
+  return formData.getAll("productIds").map((v) => Number(v));
+}
+
+function readRelatedPostIds(formData: FormData): number[] {
+  return formData.getAll("relatedPostIds").map((v) => Number(v));
 }
 
 export async function createProductAction(formData: FormData) {
@@ -89,6 +113,35 @@ export async function updateOrderStatusAction(formData: FormData) {
   const status = String(formData.get("status"));
   await updateOrderStatus(id, status);
   revalidatePath("/admin/orders");
+}
+
+export async function createPostAction(formData: FormData) {
+  await requireSession();
+  const post = await createPost(readPostInput(formData));
+  await setProductsForPost(post.id, readProductIds(formData));
+  await setRelatedPosts(post.id, readRelatedPostIds(formData));
+  revalidatePath("/research");
+  revalidatePath("/admin/posts");
+  redirect("/admin/posts");
+}
+
+export async function updatePostAction(formData: FormData) {
+  await requireSession();
+  const id = Number(formData.get("id"));
+  await updatePost(id, readPostInput(formData));
+  await setProductsForPost(id, readProductIds(formData));
+  await setRelatedPosts(id, readRelatedPostIds(formData));
+  revalidatePath("/research");
+  revalidatePath("/admin/posts");
+  redirect("/admin/posts");
+}
+
+export async function deletePostAction(formData: FormData) {
+  await requireSession();
+  const id = Number(formData.get("id"));
+  await deletePost(id);
+  revalidatePath("/research");
+  revalidatePath("/admin/posts");
 }
 
 export async function logout() {

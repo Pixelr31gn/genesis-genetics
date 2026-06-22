@@ -25,6 +25,9 @@ export default function Header() {
           <a href="/standards" className="hover:text-white transition">
             Standards
           </a>
+          <a href="/research" className="hover:text-white transition">
+            Research
+          </a>
         </nav>
 
         <div className="flex items-center gap-3">

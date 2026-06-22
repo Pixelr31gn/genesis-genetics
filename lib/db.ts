@@ -178,7 +178,7 @@ export async function deleteProduct(id: number): Promise<void> {
 
 export async function getRelatedProducts(productId: number): Promise<Product[]> {
   const rows = await sql`
-    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_type, p.description, p.stock, p.created_at
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_type, p.description, p.stock, p.sort_order, p.discount_percent, p.created_at
     FROM related_products rp
     JOIN products p ON p.id = rp.related_id
     WHERE rp.product_id = ${productId}
@@ -204,6 +204,166 @@ export async function setRelatedProducts(
     uniqueIds.map(
       (relatedId) =>
         sql`INSERT INTO related_products (product_id, related_id) VALUES (${productId}, ${relatedId}) ON CONFLICT DO NOTHING`
+    )
+  );
+}
+
+/* =========================
+   RESEARCH POSTS
+========================= */
+
+export type Post = {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  meta_description: string | null;
+  cluster: string;
+  published: boolean;
+  created_at: string;
+};
+
+export type PostInput = {
+  title: string;
+  excerpt: string;
+  content: string;
+  meta_description: string;
+  cluster: string;
+  published: boolean;
+};
+
+async function generateUniquePostSlug(title: string, excludeId?: number): Promise<string> {
+  const base = slugify(title) || "post";
+  let slug = base;
+  let suffix = 1;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const rows =
+      excludeId !== undefined
+        ? await sql`SELECT id FROM posts WHERE slug = ${slug} AND id != ${excludeId}`
+        : await sql`SELECT id FROM posts WHERE slug = ${slug}`;
+    if (rows.length === 0) return slug;
+    suffix += 1;
+    slug = `${base}-${suffix}`;
+  }
+}
+
+export async function getPosts(includeUnpublished = false): Promise<Post[]> {
+  const rows = includeUnpublished
+    ? await sql`SELECT id, slug, title, excerpt, content, meta_description, cluster, published, created_at FROM posts ORDER BY created_at DESC`
+    : await sql`SELECT id, slug, title, excerpt, content, meta_description, cluster, published, created_at FROM posts WHERE published = true ORDER BY created_at DESC`;
+  return rows as Post[];
+}
+
+export async function getPostById(id: number): Promise<Post | null> {
+  const rows = await sql`
+    SELECT id, slug, title, excerpt, content, meta_description, cluster, published, created_at
+    FROM posts WHERE id = ${id}
+  `;
+  return (rows[0] as Post) ?? null;
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const rows = await sql`
+    SELECT id, slug, title, excerpt, content, meta_description, cluster, published, created_at
+    FROM posts WHERE slug = ${slug}
+  `;
+  return (rows[0] as Post) ?? null;
+}
+
+export async function createPost(data: PostInput): Promise<Post> {
+  const slug = await generateUniquePostSlug(data.title);
+  const rows = await sql`
+    INSERT INTO posts (slug, title, excerpt, content, meta_description, cluster, published)
+    VALUES (${slug}, ${data.title}, ${data.excerpt}, ${data.content}, ${data.meta_description}, ${data.cluster}, ${data.published})
+    RETURNING id, slug, title, excerpt, content, meta_description, cluster, published, created_at
+  `;
+  return rows[0] as Post;
+}
+
+export async function updatePost(id: number, data: PostInput): Promise<Post> {
+  const slug = await generateUniquePostSlug(data.title, id);
+  const rows = await sql`
+    UPDATE posts
+    SET slug = ${slug},
+        title = ${data.title},
+        excerpt = ${data.excerpt},
+        content = ${data.content},
+        meta_description = ${data.meta_description},
+        cluster = ${data.cluster},
+        published = ${data.published}
+    WHERE id = ${id}
+    RETURNING id, slug, title, excerpt, content, meta_description, cluster, published, created_at
+  `;
+  return rows[0] as Post;
+}
+
+export async function deletePost(id: number): Promise<void> {
+  await sql`DELETE FROM posts WHERE id = ${id}`;
+}
+
+export async function getProductsForPost(postId: number): Promise<Product[]> {
+  const rows = await sql`
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_type, p.description, p.stock, p.sort_order, p.discount_percent, p.created_at
+    FROM post_products pp
+    JOIN products p ON p.id = pp.product_id
+    WHERE pp.post_id = ${postId}
+    ORDER BY p.name ASC
+  `;
+  return rows as Product[];
+}
+
+export async function getProductIdsForPost(postId: number): Promise<number[]> {
+  const rows = await sql`SELECT product_id FROM post_products WHERE post_id = ${postId}`;
+  return rows.map((r) => r.product_id as number);
+}
+
+export async function setProductsForPost(postId: number, productIds: number[]): Promise<void> {
+  await sql`DELETE FROM post_products WHERE post_id = ${postId}`;
+  const uniqueIds = [...new Set(productIds)];
+  await Promise.all(
+    uniqueIds.map(
+      (productId) =>
+        sql`INSERT INTO post_products (post_id, product_id) VALUES (${postId}, ${productId}) ON CONFLICT DO NOTHING`
+    )
+  );
+}
+
+export async function getPostsForProduct(productId: number): Promise<Post[]> {
+  const rows = await sql`
+    SELECT po.id, po.slug, po.title, po.excerpt, po.content, po.meta_description, po.cluster, po.published, po.created_at
+    FROM post_products pp
+    JOIN posts po ON po.id = pp.post_id
+    WHERE pp.product_id = ${productId} AND po.published = true
+    ORDER BY po.title ASC
+  `;
+  return rows as Post[];
+}
+
+export async function getRelatedPosts(postId: number): Promise<Post[]> {
+  const rows = await sql`
+    SELECT po.id, po.slug, po.title, po.excerpt, po.content, po.meta_description, po.cluster, po.published, po.created_at
+    FROM related_posts rp
+    JOIN posts po ON po.id = rp.related_id
+    WHERE rp.post_id = ${postId} AND po.published = true
+    ORDER BY po.title ASC
+  `;
+  return rows as Post[];
+}
+
+export async function getRelatedPostIds(postId: number): Promise<number[]> {
+  const rows = await sql`SELECT related_id FROM related_posts WHERE post_id = ${postId}`;
+  return rows.map((r) => r.related_id as number);
+}
+
+export async function setRelatedPosts(postId: number, relatedIds: number[]): Promise<void> {
+  await sql`DELETE FROM related_posts WHERE post_id = ${postId}`;
+  const uniqueIds = [...new Set(relatedIds)].filter((id) => id !== postId);
+  await Promise.all(
+    uniqueIds.map(
+      (relatedId) =>
+        sql`INSERT INTO related_posts (post_id, related_id) VALUES (${postId}, ${relatedId}) ON CONFLICT DO NOTHING`
     )
   );
 }
