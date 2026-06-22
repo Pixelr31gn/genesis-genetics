@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import type { Order, OrderItem } from "./db";
 import { getShippingTier } from "./shipping";
 import { getTrackingUrl } from "./tracking";
+import { formatCurrency } from "./currency";
 
 const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL || "Genesis Genetics <onboarding@resend.dev>";
@@ -46,15 +47,18 @@ export async function sendOrderConfirmationEmail(
   const client = getClient();
   if (!client) return;
 
-  const tier = getShippingTier(order.shipping_tier);
+  const tier = getShippingTier(order.shipping_country, order.shipping_tier);
   const trackUrl = "https://genesisgenetics.io/track-order";
+  const chargedTotal = formatCurrency(Number(order.total_charged), order.currency);
+  const usdNote =
+    order.currency !== "USD" ? ` (≈ $${Number(order.total).toFixed(2)} USD)` : "";
 
   const paymentNote =
     order.payment_method === "zelle"
       ? `<p style="color:#999;line-height:1.6;">Send <strong style="color:#fff;">$${Number(
           order.total
         ).toFixed(2)}</strong> via Zelle to <strong style="color:#00ff41;">8017160941</strong> and include your order code <strong style="color:#00ff41;">${order.order_code}</strong> in the memo.</p>`
-      : `<p style="color:#999;line-height:1.6;">Your PayPal payment has been confirmed.</p>`;
+      : `<p style="color:#999;line-height:1.6;">Your PayPal payment of <strong style="color:#fff;">${chargedTotal}</strong>${usdNote} has been confirmed.</p>`;
 
   const html = wrapEmail(`
     <h1 style="font-size:22px;font-weight:300;margin:0 0 8px;">Thank you for your order</h1>
@@ -64,7 +68,7 @@ export async function sendOrderConfirmationEmail(
     <p style="color:#999;margin-top:16px;">
       Subtotal: $${Number(order.subtotal).toFixed(2)}<br/>
       Shipping (${tier.label}, ${tier.eta}): $${Number(order.shipping_cost).toFixed(2)}<br/>
-      <strong style="color:#fff;">Total: $${Number(order.total).toFixed(2)}</strong>
+      <strong style="color:#fff;">Total: ${chargedTotal}${usdNote}</strong>
     </p>
     <p style="color:#999;margin-top:16px;line-height:1.6;">
       Shipping to:<br/>

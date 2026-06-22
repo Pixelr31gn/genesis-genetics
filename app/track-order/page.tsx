@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { getTrackingUrl } from "@/lib/tracking";
 import { getShippingTier } from "@/lib/shipping";
+import { formatCurrency } from "@/lib/currency";
 import { lookupOrderAction } from "./actions";
 
 const STEPS = [
@@ -169,12 +170,13 @@ export default function TrackOrderPage() {
                 Subtotal: ${Number(order.subtotal).toFixed(2)}
               </p>
               <p className="text-sm text-white/50">
-                Shipping ({getShippingTier(order.shipping_tier).label},{" "}
-                {getShippingTier(order.shipping_tier).eta}): $
+                Shipping ({getShippingTier(order.shipping_country, order.shipping_tier).label},{" "}
+                {getShippingTier(order.shipping_country, order.shipping_tier).eta}): $
                 {Number(order.shipping_cost).toFixed(2)}
               </p>
               <p className="mt-1 text-sm text-white/40">
-                Total: ${Number(order.total).toFixed(2)}
+                Total: {formatCurrency(Number(order.total_charged), order.currency)}
+                {order.currency !== "USD" ? ` (≈ $${Number(order.total).toFixed(2)} USD)` : ""}
               </p>
             </div>
 

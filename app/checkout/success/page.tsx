@@ -1,13 +1,14 @@
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { formatCurrency } from "@/lib/currency";
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; method?: string; total?: string }>;
+  searchParams: Promise<{ code?: string; method?: string; total?: string; currency?: string }>;
 }) {
-  const { code, method, total } = await searchParams;
+  const { code, method, total, currency } = await searchParams;
 
   return (
     <main className="bg-black text-white min-h-screen selection:bg-[#00FF41]/30">
@@ -39,8 +40,11 @@ export default async function CheckoutSuccessPage({
           </div>
         ) : (
           <p className="mt-6 text-white/50 leading-relaxed">
-            Your PayPal payment was confirmed. We&apos;ll be in touch shortly
-            with shipping details.
+            Your PayPal payment of{" "}
+            <span className="text-white">
+              {total && currency ? formatCurrency(Number(total), currency) : "your order"}
+            </span>{" "}
+            was confirmed. Track your order anytime below.
           </p>
         )}
 

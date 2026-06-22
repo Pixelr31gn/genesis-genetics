@@ -13,7 +13,8 @@
     "db:migrate-sort-discount": "node --env-file=.env.local scripts/add-sort-and-discount.mjs",
     "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs",
     "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs",
-    "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs"
+    "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs",
+    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

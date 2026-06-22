@@ -24,7 +24,8 @@ async function getAccessToken(): Promise<string> {
 
 export async function verifyPaypalOrder(
   paypalOrderId: string,
-  expectedTotal: number
+  expectedAmount: number,
+  expectedCurrency: string
 ): Promise<boolean> {
   const accessToken = await getAccessToken();
 
@@ -36,8 +37,13 @@ export async function verifyPaypalOrder(
 
   const order = await res.json();
   const isCompleted = order.status === "COMPLETED";
-  const amount = Number(order.purchase_units?.[0]?.amount?.value ?? NaN);
-  const amountMatches = Math.abs(amount - expectedTotal) < 0.01;
+  const unit = order.purchase_units?.[0];
+  const amount = Number(unit?.amount?.value ?? NaN);
+  const currencyMatches = unit?.amount?.currency_code === expectedCurrency;
+  // Allow a little drift versus expectedAmount since the client and server
+  // may fetch the USD->currency exchange rate at slightly different moments.
+  const tolerance = Math.max(expectedAmount * 0.03, 0.5);
+  const amountMatches = Math.abs(amount - expectedAmount) <= tolerance;
 
-  return isCompleted && amountMatches;
+  return isCompleted && currencyMatches && amountMatches;
 }

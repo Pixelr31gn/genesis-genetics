@@ -6,10 +6,23 @@ import Script from "next/script";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "@/lib/cart-context";
-import { SHIPPING_TIERS, getShippingTier } from "@/lib/shipping";
-import { createZelleOrderAction, confirmPaypalOrderAction } from "./actions";
+import { getShippingTiers, getFreeShippingThreshold } from "@/lib/shipping";
+import { COUNTRIES, getCurrencyForCountry, isDomestic } from "@/lib/countries";
+import { formatCurrency } from "@/lib/currency";
+import {
+  createZelleOrderAction,
+  confirmPaypalOrderAction,
+  getCheckoutQuoteAction,
+} from "./actions";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+const ZERO_DECIMAL_CURRENCIES = new Set(["JPY", "HUF"]);
+
+function formatForPaypal(amount: number, currency: string): string {
+  return ZERO_DECIMAL_CURRENCIES.has(currency)
+    ? Math.round(amount).toString()
+    : amount.toFixed(2);
+}
 
 declare global {
   interface Window {
@@ -21,6 +34,15 @@ declare global {
     };
   }
 }
+
+type Quote = {
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+  currency: string;
+  rate: number;
+  totalCharged: number;
+};
 
 export default function CheckoutPage() {
   const cart = useCart();
@@ -41,6 +63,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const paypalRef = useRef<HTMLDivElement>(null);
 
   const customer = {
@@ -59,6 +82,13 @@ export default function CheckoutPage() {
   formRef.current = customer;
   const shippingTierRef = useRef(shippingTier);
   shippingTierRef.current = shippingTier;
+  const quoteRef = useRef(quote);
+  quoteRef.current = quote;
+
+  const domestic = isDomestic(shippingCountry);
+  const currency = getCurrencyForCountry(shippingCountry);
+  const tiers = getShippingTiers(shippingCountry);
+  const freeShippingThreshold = getFreeShippingThreshold(shippingCountry);
 
   function hasRequiredShippingInfo(c: typeof customer) {
     return Boolean(
@@ -77,11 +107,29 @@ export default function CheckoutPage() {
     price: i.price,
     quantity: i.quantity,
   }));
-  const subtotal = cart.total;
-  const shippingCost = getShippingTier(shippingTier).price;
-  const total = subtotal + shippingCost;
-  const totalRef = useRef(total);
-  totalRef.current = total;
+
+  useEffect(() => {
+    if (!domestic && method === "zelle") setMethod("paypal");
+  }, [domestic, method]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCheckoutQuoteAction(itemsForOrder, shippingTier, shippingCountry)
+      .then((q) => {
+        if (!cancelled) setQuote(q);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Couldn't calculate shipping/currency. Please try again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shippingTier, shippingCountry, cart.total]);
+
+  useEffect(() => {
+    setPaypalReady(false);
+  }, [quote?.currency]);
 
   async function handleZelleSubmit() {
     if (!hasRequiredShippingInfo(customer)) {
@@ -123,9 +171,21 @@ export default function CheckoutPage() {
           setError("Please fill in your name, email, and shipping address before paying.");
           return Promise.reject(new Error("Missing contact info"));
         }
+        const q = quoteRef.current;
+        if (!q) {
+          setError("Still calculating your total — try again in a moment.");
+          return Promise.reject(new Error("Quote not ready"));
+        }
         setError(null);
         return actions.order.create({
-          purchase_units: [{ amount: { value: totalRef.current.toFixed(2) } }],
+          purchase_units: [
+            {
+              amount: {
+                value: formatForPaypal(q.totalCharged, q.currency),
+                currency_code: q.currency,
+              },
+            },
+          ],
         });
       },
       onApprove: async (_data: unknown, actions: any) => {
@@ -139,7 +199,9 @@ export default function CheckoutPage() {
             shippingTierRef.current
           );
           cart.clear();
-          router.push(`/checkout/success?code=${result.orderCode}&method=paypal`);
+          router.push(
+            `/checkout/success?code=${result.orderCode}&method=paypal&total=${result.totalCharged.toFixed(2)}&currency=${result.currency}`
+          );
         } catch {
           setError(
             "We couldn't verify your PayPal payment. Please contact us with your PayPal transaction ID."
@@ -171,9 +233,10 @@ export default function CheckoutPage() {
 
   return (
     <main className="bg-black text-white min-h-screen selection:bg-[#00FF41]/30">
-      {PAYPAL_CLIENT_ID ? (
+      {PAYPAL_CLIENT_ID && quote ? (
         <Script
-          src={`https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD`}
+          key={quote.currency}
+          src={`https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=${quote.currency}`}
           onLoad={() => setPaypalReady(true)}
         />
       ) : null}
@@ -260,7 +323,7 @@ export default function CheckoutPage() {
                 required
               />
             </Field>
-            <Field label="State">
+            <Field label="State / Region">
               <input
                 name="address-level1"
                 autoComplete="address-level1"
@@ -270,7 +333,7 @@ export default function CheckoutPage() {
                 required
               />
             </Field>
-            <Field label="ZIP">
+            <Field label="ZIP / Postal">
               <input
                 name="postal-code"
                 autoComplete="postal-code"
@@ -282,14 +345,20 @@ export default function CheckoutPage() {
             </Field>
           </div>
           <Field label="Country">
-            <input
+            <select
               name="country"
               autoComplete="country"
               value={shippingCountry}
               onChange={(e) => setShippingCountry(e.target.value)}
               className="field"
               required
-            />
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </Field>
 
           <Field label="Order Notes (optional)">
@@ -302,68 +371,87 @@ export default function CheckoutPage() {
           </Field>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40 pt-2 border-t border-white/10 mb-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40 pt-2 border-t border-white/10 mb-1">
               Shipping Method
             </p>
+            <p className="text-xs text-white/30 mb-3">
+              Free shipping on orders over{" "}
+              {formatCurrency(freeShippingThreshold, "USD")}
+              {!domestic ? " (international)" : ""}.
+            </p>
             <div className="space-y-2">
-              {SHIPPING_TIERS.map((tier) => (
-                <button
-                  key={tier.value}
-                  type="button"
-                  onClick={() => setShippingTier(tier.value)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition ${
-                    shippingTier === tier.value
-                      ? "border-[#00FF41]/50 bg-[#00FF41]/5"
-                      : "border-white/15 hover:border-white/30"
-                  }`}
-                >
-                  <span>
-                    <span
-                      className={`block text-sm ${
-                        shippingTier === tier.value ? "text-[#00FF41]" : "text-white/80"
-                      }`}
-                    >
-                      {tier.label}
+              {tiers.map((tier) => {
+                const free = (quote?.subtotal ?? cart.total) >= freeShippingThreshold;
+                return (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => setShippingTier(tier.value)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition ${
+                      shippingTier === tier.value
+                        ? "border-[#00FF41]/50 bg-[#00FF41]/5"
+                        : "border-white/15 hover:border-white/30"
+                    }`}
+                  >
+                    <span>
+                      <span
+                        className={`block text-sm ${
+                          shippingTier === tier.value ? "text-[#00FF41]" : "text-white/80"
+                        }`}
+                      >
+                        {tier.label}
+                      </span>
+                      <span className="block text-xs text-white/40 mt-0.5">{tier.eta}</span>
                     </span>
-                    <span className="block text-xs text-white/40 mt-0.5">{tier.eta}</span>
-                  </span>
-                  <span className="text-sm text-white/70">${tier.price.toFixed(2)}</span>
-                </button>
-              ))}
+                    <span className="text-sm text-white/70">
+                      {free ? "Free" : `$${tier.price.toFixed(2)}`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="pt-2 border-t border-white/10 space-y-1.5">
             <div className="flex items-center justify-between text-sm text-white/50">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>${(quote?.subtotal ?? cart.total).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between text-sm text-white/50">
               <span>Shipping</span>
-              <span>${shippingCost.toFixed(2)}</span>
+              <span>${(quote?.shippingCost ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between pt-1">
               <span className="text-white/50">Total</span>
-              <span className="text-2xl font-light">${total.toFixed(2)}</span>
+              <span className="text-2xl font-light">
+                {quote ? formatCurrency(quote.totalCharged, quote.currency) : "—"}
+              </span>
             </div>
+            {quote && quote.currency !== "USD" ? (
+              <p className="text-xs text-white/30">
+                ≈ ${quote.total.toFixed(2)} USD · rate locked at checkout
+              </p>
+            ) : null}
           </div>
 
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">
               Payment Method
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setMethod("zelle")}
-                className={`py-3 rounded-xl border text-sm transition ${
-                  method === "zelle"
-                    ? "border-[#00FF41]/50 text-[#00FF41] bg-[#00FF41]/5"
-                    : "border-white/15 text-white/60 hover:border-white/30"
-                }`}
-              >
-                Zelle
-              </button>
+            <div className={`grid gap-3 ${domestic ? "grid-cols-2" : "grid-cols-1"}`}>
+              {domestic ? (
+                <button
+                  type="button"
+                  onClick={() => setMethod("zelle")}
+                  className={`py-3 rounded-xl border text-sm transition ${
+                    method === "zelle"
+                      ? "border-[#00FF41]/50 text-[#00FF41] bg-[#00FF41]/5"
+                      : "border-white/15 text-white/60 hover:border-white/30"
+                  }`}
+                >
+                  Zelle
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setMethod("paypal")}
@@ -376,14 +464,19 @@ export default function CheckoutPage() {
                 PayPal
               </button>
             </div>
+            {!domestic ? (
+              <p className="text-xs text-white/30 mt-2">
+                Zelle requires a US bank account, so international orders pay via PayPal.
+              </p>
+            ) : null}
           </div>
 
           {error ? <p className="text-sm text-red-400/80">{error}</p> : null}
 
-          {method === "zelle" ? (
+          {method === "zelle" && quote ? (
             <div className="space-y-4">
               <p className="text-sm text-white/50 leading-relaxed">
-                Send <span className="text-white">${total.toFixed(2)}</span> via
+                Send <span className="text-white">${quote.total.toFixed(2)}</span> via
                 Zelle to <span className="text-[#00FF41]">8017160941</span>. A
                 unique order code will be generated for you to include in the
                 Zelle memo once you place the order below.
@@ -397,11 +490,11 @@ export default function CheckoutPage() {
                 {submitting ? "Placing Order..." : "I'll Pay via Zelle — Place Order"}
               </button>
             </div>
-          ) : (
+          ) : method === "paypal" ? (
             <div className="rounded-2xl border border-[#00FF41]/25 bg-[#00FF41]/[0.04] p-3 shadow-[0_0_24px_rgba(0,255,65,0.08)]">
               <div ref={paypalRef} className="min-h-[50px]" />
             </div>
-          )}
+          ) : null}
         </form>
       </section>
 

@@ -2,7 +2,9 @@
 
 import { createOrder, getOrderItems, markOrderPaidWithPaypal } from "@/lib/db";
 import { verifyPaypalOrder } from "@/lib/paypal";
-import { getShippingTier } from "@/lib/shipping";
+import { getShippingCost } from "@/lib/shipping";
+import { getCurrencyForCountry, isDomestic } from "@/lib/countries";
+import { getExchangeRate, convertFromUSD } from "@/lib/currency";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export type CheckoutItem = {
@@ -38,14 +40,32 @@ function computeSubtotal(items: CheckoutItem[]): number {
   return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 }
 
+export async function getCheckoutQuoteAction(
+  items: CheckoutItem[],
+  shippingTier: string,
+  countryCode: string
+) {
+  const subtotal = computeSubtotal(items);
+  const shippingCost = getShippingCost(countryCode, shippingTier, subtotal);
+  const total = subtotal + shippingCost;
+  const currency = getCurrencyForCountry(countryCode);
+  const rate = await getExchangeRate(currency);
+  const totalCharged = convertFromUSD(total, rate, currency);
+  return { subtotal, shippingCost, total, currency, rate, totalCharged };
+}
+
 export async function createZelleOrderAction(
   customer: CheckoutCustomer,
   items: CheckoutItem[],
   shippingTier: string
 ) {
+  if (!isDomestic(customer.shippingCountry)) {
+    throw new Error("Zelle is only available for US shipping addresses");
+  }
+
   const subtotal = computeSubtotal(items);
-  const tier = getShippingTier(shippingTier);
-  const total = subtotal + tier.price;
+  const shippingCost = getShippingCost(customer.shippingCountry, shippingTier, subtotal);
+  const total = subtotal + shippingCost;
 
   const order = await createOrder({
     customer_name: customer.name,
@@ -53,9 +73,12 @@ export async function createZelleOrderAction(
     customer_note: customer.note,
     payment_method: "zelle",
     subtotal,
-    shipping_tier: tier.value,
-    shipping_cost: tier.price,
+    shipping_tier: shippingTier,
+    shipping_cost: shippingCost,
     total,
+    currency: "USD",
+    fx_rate: 1,
+    total_charged: total,
     phone: customer.phone,
     shipping_address1: customer.shippingAddress1,
     shipping_address2: customer.shippingAddress2,
@@ -79,10 +102,13 @@ export async function confirmPaypalOrderAction(
   shippingTier: string
 ) {
   const subtotal = computeSubtotal(items);
-  const tier = getShippingTier(shippingTier);
-  const total = subtotal + tier.price;
+  const shippingCost = getShippingCost(customer.shippingCountry, shippingTier, subtotal);
+  const total = subtotal + shippingCost;
+  const currency = getCurrencyForCountry(customer.shippingCountry);
+  const rate = await getExchangeRate(currency);
+  const totalCharged = convertFromUSD(total, rate, currency);
 
-  const verified = await verifyPaypalOrder(paypalOrderId, total);
+  const verified = await verifyPaypalOrder(paypalOrderId, totalCharged, currency);
   if (!verified) {
     throw new Error("PayPal payment could not be verified");
   }
@@ -93,9 +119,12 @@ export async function confirmPaypalOrderAction(
     customer_note: customer.note,
     payment_method: "paypal",
     subtotal,
-    shipping_tier: tier.value,
-    shipping_cost: tier.price,
+    shipping_tier: shippingTier,
+    shipping_cost: shippingCost,
     total,
+    currency,
+    fx_rate: rate,
+    total_charged: totalCharged,
     phone: customer.phone,
     shipping_address1: customer.shippingAddress1,
     shipping_address2: customer.shippingAddress2,
@@ -110,5 +139,5 @@ export async function confirmPaypalOrderAction(
   const orderItems = await getOrderItems(order.id);
   await sendOrderConfirmationEmail(order, orderItems);
 
-  return { id: order.id, orderCode: order.order_code, total };
+  return { id: order.id, orderCode: order.order_code, total, totalCharged, currency };
 }
