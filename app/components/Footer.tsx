@@ -6,9 +6,14 @@ export default function Footer() {
         <p className="text-xs text-white/20 text-center sm:text-right max-w-md">
           For research use only. Not for human or veterinary consumption.
         </p>
-        <a href="/admin/login" className="text-white/20 hover:text-white/50 transition">
-          Staff Login
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="/track-order" className="text-white/20 hover:text-white/50 transition">
+            Track Order
+          </a>
+          <a href="/admin/login" className="text-white/20 hover:text-white/50 transition">
+            Staff Login
+          </a>
+        </div>
       </div>
     </footer>
   );

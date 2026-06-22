@@ -9,6 +9,7 @@ import {
   createProduct,
   deletePost,
   deleteProduct,
+  markOrderShipped,
   setProductOrder,
   setProductsForPost,
   setRelatedPosts,
@@ -112,6 +113,15 @@ export async function updateOrderStatusAction(formData: FormData) {
   const id = Number(formData.get("id"));
   const status = String(formData.get("status"));
   await updateOrderStatus(id, status);
+  revalidatePath("/admin/orders");
+}
+
+export async function markOrderShippedAction(formData: FormData) {
+  await requireSession();
+  const id = Number(formData.get("id"));
+  const carrier = String(formData.get("carrier") || "other");
+  const trackingNumber = String(formData.get("tracking_number") || "");
+  await markOrderShipped(id, carrier, trackingNumber);
   revalidatePath("/admin/orders");
 }
 

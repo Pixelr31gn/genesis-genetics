@@ -44,12 +44,20 @@ export default async function CheckoutSuccessPage({
           </p>
         )}
 
-        <Link
-          href="/"
-          className="inline-flex mt-10 px-6 py-3 rounded-full border border-white/15 text-white/70 text-sm hover:border-white/30 hover:text-white transition"
-        >
-          Back to Home
-        </Link>
+        <div className="mt-10 flex items-center justify-center gap-3">
+          <Link
+            href="/"
+            className="inline-flex px-6 py-3 rounded-full border border-white/15 text-white/70 text-sm hover:border-white/30 hover:text-white transition"
+          >
+            Back to Home
+          </Link>
+          <Link
+            href="/track-order"
+            className="inline-flex px-6 py-3 rounded-full border border-[#00FF41]/30 text-[#00FF41] text-sm hover:bg-[#00FF41] hover:text-black transition"
+          >
+            Track Your Order
+          </Link>
+        </div>
       </section>
 
       <Footer />

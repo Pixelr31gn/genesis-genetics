@@ -382,6 +382,15 @@ export type Order = {
   status: string;
   paypal_order_id: string | null;
   total: number;
+  phone: string | null;
+  shipping_address1: string | null;
+  shipping_address2: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_zip: string | null;
+  shipping_country: string;
+  tracking_number: string | null;
+  tracking_carrier: string | null;
   created_at: string;
 };
 
@@ -400,6 +409,13 @@ export type CreateOrderInput = {
   customer_note: string;
   payment_method: "zelle" | "paypal";
   total: number;
+  phone: string;
+  shipping_address1: string;
+  shipping_address2: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_zip: string;
+  shipping_country: string;
   items: {
     product_id: number;
     product_name: string;
@@ -425,9 +441,15 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     const orderCode = generateOrderCode();
     try {
       const rows = await sql`
-        INSERT INTO orders (order_code, customer_name, customer_email, customer_note, payment_method, total)
-        VALUES (${orderCode}, ${input.customer_name}, ${input.customer_email}, ${input.customer_note}, ${input.payment_method}, ${input.total})
-        RETURNING id, order_code, customer_name, customer_email, customer_note, payment_method, status, paypal_order_id, total, created_at
+        INSERT INTO orders (
+          order_code, customer_name, customer_email, customer_note, payment_method, total,
+          phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_zip, shipping_country
+        )
+        VALUES (
+          ${orderCode}, ${input.customer_name}, ${input.customer_email}, ${input.customer_note}, ${input.payment_method}, ${input.total},
+          ${input.phone}, ${input.shipping_address1}, ${input.shipping_address2}, ${input.shipping_city}, ${input.shipping_state}, ${input.shipping_zip}, ${input.shipping_country}
+        )
+        RETURNING *
       `;
       order = rows[0] as Order;
     } catch (err: unknown) {
@@ -480,4 +502,27 @@ export async function markOrderPaidWithPaypal(
   await sql`
     UPDATE orders SET status = 'paid', paypal_order_id = ${paypalOrderId} WHERE id = ${id}
   `;
+}
+
+export async function markOrderShipped(
+  id: number,
+  carrier: string,
+  trackingNumber: string
+): Promise<void> {
+  await sql`
+    UPDATE orders
+    SET status = 'shipped', tracking_carrier = ${carrier}, tracking_number = ${trackingNumber}
+    WHERE id = ${id}
+  `;
+}
+
+export async function getOrderByCodeAndEmail(
+  orderCode: string,
+  email: string
+): Promise<Order | null> {
+  const rows = await sql`
+    SELECT * FROM orders
+    WHERE upper(order_code) = upper(${orderCode}) AND lower(customer_email) = lower(${email})
+  `;
+  return (rows[0] as Order) ?? null;
 }

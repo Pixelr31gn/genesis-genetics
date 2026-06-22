@@ -14,6 +14,13 @@ export type CheckoutCustomer = {
   name: string;
   email: string;
   note: string;
+  phone: string;
+  shippingAddress1: string;
+  shippingAddress2: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingZip: string;
+  shippingCountry: string;
 };
 
 function toOrderItems(items: CheckoutItem[]) {
@@ -36,6 +43,13 @@ export async function createZelleOrderAction(
     customer_note: customer.note,
     payment_method: "zelle",
     total,
+    phone: customer.phone,
+    shipping_address1: customer.shippingAddress1,
+    shipping_address2: customer.shippingAddress2,
+    shipping_city: customer.shippingCity,
+    shipping_state: customer.shippingState,
+    shipping_zip: customer.shippingZip,
+    shipping_country: customer.shippingCountry,
     items: toOrderItems(items),
   });
   return { id: order.id, orderCode: order.order_code };
@@ -58,6 +72,13 @@ export async function confirmPaypalOrderAction(
     customer_note: customer.note,
     payment_method: "paypal",
     total,
+    phone: customer.phone,
+    shipping_address1: customer.shippingAddress1,
+    shipping_address2: customer.shippingAddress2,
+    shipping_city: customer.shippingCity,
+    shipping_state: customer.shippingState,
+    shipping_zip: customer.shippingZip,
+    shipping_country: customer.shippingCountry,
     items: toOrderItems(items),
   });
   await markOrderPaidWithPaypal(order.id, paypalOrderId);

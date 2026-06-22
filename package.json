@@ -11,7 +11,8 @@
     "db:migrate-images": "node --env-file=.env.local scripts/migrate-image-storage.mjs",
     "db:migrate-cart": "node --env-file=.env.local scripts/add-cart-checkout.mjs",
     "db:migrate-sort-discount": "node --env-file=.env.local scripts/add-sort-and-discount.mjs",
-    "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs"
+    "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs",
+    "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

@@ -28,14 +28,44 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shippingAddress1, setShippingAddress1] = useState("");
+  const [shippingAddress2, setShippingAddress2] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingState, setShippingState] = useState("");
+  const [shippingZip, setShippingZip] = useState("");
+  const [shippingCountry, setShippingCountry] = useState("US");
   const [method, setMethod] = useState<"zelle" | "paypal">("zelle");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
   const paypalRef = useRef<HTMLDivElement>(null);
 
-  const formRef = useRef({ name, email, note });
-  formRef.current = { name, email, note };
+  const customer = {
+    name,
+    email,
+    note,
+    phone,
+    shippingAddress1,
+    shippingAddress2,
+    shippingCity,
+    shippingState,
+    shippingZip,
+    shippingCountry,
+  };
+  const formRef = useRef(customer);
+  formRef.current = customer;
+
+  function hasRequiredShippingInfo(c: typeof customer) {
+    return Boolean(
+      c.name.trim() &&
+        c.email.trim() &&
+        c.shippingAddress1.trim() &&
+        c.shippingCity.trim() &&
+        c.shippingState.trim() &&
+        c.shippingZip.trim()
+    );
+  }
 
   const itemsForOrder = cart.items.map((i) => ({
     productId: i.productId,
@@ -46,15 +76,15 @@ export default function CheckoutPage() {
   const total = cart.total;
 
   async function handleZelleSubmit() {
-    if (!name.trim() || !email.trim()) {
-      setError("Please enter your name and email.");
+    if (!hasRequiredShippingInfo(customer)) {
+      setError("Please fill in your name, email, and shipping address.");
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
       const result = await createZelleOrderAction(
-        { name, email, note },
+        customer,
         itemsForOrder,
         total
       );
@@ -81,9 +111,8 @@ export default function CheckoutPage() {
         height: 48,
       },
       createOrder: (_data: unknown, actions: any) => {
-        const { name, email } = formRef.current;
-        if (!name.trim() || !email.trim()) {
-          setError("Please enter your name and email before paying.");
+        if (!hasRequiredShippingInfo(formRef.current)) {
+          setError("Please fill in your name, email, and shipping address before paying.");
           return Promise.reject(new Error("Missing contact info"));
         }
         setError(null);
@@ -151,24 +180,110 @@ export default function CheckoutPage() {
           Complete Your Order
         </h1>
 
-        <div className="border border-white/10 rounded-2xl bg-white/[0.03] p-6 space-y-5">
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="border border-white/10 rounded-2xl bg-white/[0.03] p-6 space-y-5"
+        >
           <Field label="Full Name">
             <input
+              name="name"
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="field"
               required
             />
           </Field>
-          <Field label="Email">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Email">
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="field"
+                required
+              />
+            </Field>
+            <Field label="Phone">
+              <input
+                type="tel"
+                name="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="field"
+              />
+            </Field>
+          </div>
+
+          <p className="text-xs uppercase tracking-[0.2em] text-white/40 pt-2 border-t border-white/10">
+            Shipping Address
+          </p>
+
+          <Field label="Address Line 1">
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="address-line1"
+              autoComplete="address-line1"
+              value={shippingAddress1}
+              onChange={(e) => setShippingAddress1(e.target.value)}
               className="field"
               required
             />
           </Field>
+          <Field label="Address Line 2 (optional)">
+            <input
+              name="address-line2"
+              autoComplete="address-line2"
+              value={shippingAddress2}
+              onChange={(e) => setShippingAddress2(e.target.value)}
+              className="field"
+            />
+          </Field>
+          <div className="grid grid-cols-3 gap-4">
+            <Field label="City">
+              <input
+                name="address-level2"
+                autoComplete="address-level2"
+                value={shippingCity}
+                onChange={(e) => setShippingCity(e.target.value)}
+                className="field"
+                required
+              />
+            </Field>
+            <Field label="State">
+              <input
+                name="address-level1"
+                autoComplete="address-level1"
+                value={shippingState}
+                onChange={(e) => setShippingState(e.target.value)}
+                className="field"
+                required
+              />
+            </Field>
+            <Field label="ZIP">
+              <input
+                name="postal-code"
+                autoComplete="postal-code"
+                value={shippingZip}
+                onChange={(e) => setShippingZip(e.target.value)}
+                className="field"
+                required
+              />
+            </Field>
+          </div>
+          <Field label="Country">
+            <input
+              name="country"
+              autoComplete="country"
+              value={shippingCountry}
+              onChange={(e) => setShippingCountry(e.target.value)}
+              className="field"
+              required
+            />
+          </Field>
+
           <Field label="Order Notes (optional)">
             <textarea
               value={note}
@@ -189,6 +304,7 @@ export default function CheckoutPage() {
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
+                type="button"
                 onClick={() => setMethod("zelle")}
                 className={`py-3 rounded-xl border text-sm transition ${
                   method === "zelle"
@@ -199,6 +315,7 @@ export default function CheckoutPage() {
                 Zelle
               </button>
               <button
+                type="button"
                 onClick={() => setMethod("paypal")}
                 className={`py-3 rounded-xl border text-sm transition ${
                   method === "paypal"
@@ -222,6 +339,7 @@ export default function CheckoutPage() {
                 Zelle memo once you place the order below.
               </p>
               <button
+                type="button"
                 onClick={handleZelleSubmit}
                 disabled={submitting}
                 className="w-full py-3.5 rounded-full bg-[#00FF41] text-black text-sm font-medium hover:bg-[#00FF41]/90 transition disabled:opacity-50"
@@ -234,7 +352,7 @@ export default function CheckoutPage() {
               <div ref={paypalRef} className="min-h-[50px]" />
             </div>
           )}
-        </div>
+        </form>
       </section>
 
       <Footer />

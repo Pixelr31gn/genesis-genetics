@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getOrderItems, getOrders } from "@/lib/db";
-import { updateOrderStatusAction } from "../actions";
+import { CARRIERS, getTrackingUrl } from "@/lib/tracking";
+import { markOrderShippedAction, updateOrderStatusAction } from "../actions";
 
 const STATUS_TONE: Record<string, string> = {
   pending_payment: "text-amber-300/80 border-amber-300/20",
   paid: "text-[#00FF41]/80 border-[#00FF41]/20",
+  shipped: "text-blue-300/80 border-blue-300/20",
   fulfilled: "text-white/50 border-white/15",
   cancelled: "text-red-400/70 border-red-400/20",
 };
@@ -96,7 +98,40 @@ export default async function AdminOrdersPage() {
                   </p>
                 ) : null}
 
-                <div className="mt-5 flex items-center gap-3">
+                <div className="mt-4 border-t border-white/10 pt-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 mb-1">
+                    Ship To
+                  </p>
+                  <p className="text-sm text-white/60">
+                    {order.shipping_address1}
+                    {order.shipping_address2 ? `, ${order.shipping_address2}` : ""}
+                    <br />
+                    {order.shipping_city}, {order.shipping_state}{" "}
+                    {order.shipping_zip} {order.shipping_country}
+                    {order.phone ? <> · {order.phone}</> : null}
+                  </p>
+                </div>
+
+                {order.tracking_number ? (
+                  <div className="mt-3 text-sm text-white/60">
+                    <span className="text-white/30 uppercase text-[10px] tracking-[0.2em]">
+                      Tracking
+                    </span>{" "}
+                    {order.tracking_carrier?.toUpperCase()} · {order.tracking_number}
+                    {getTrackingUrl(order.tracking_carrier || "", order.tracking_number) ? (
+                      <a
+                        href={getTrackingUrl(order.tracking_carrier || "", order.tracking_number)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-[#00FF41]/80 hover:text-[#00FF41] transition"
+                      >
+                        Track →
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="mt-5 flex items-center gap-3 flex-wrap">
                   {order.status === "pending_payment" ? (
                     <form action={updateOrderStatusAction}>
                       <input type="hidden" name="id" value={order.id} />
@@ -111,6 +146,38 @@ export default async function AdminOrdersPage() {
                   ) : null}
 
                   {order.status === "paid" ? (
+                    <form
+                      action={markOrderShippedAction}
+                      className="flex items-center gap-2"
+                    >
+                      <input type="hidden" name="id" value={order.id} />
+                      <select
+                        name="carrier"
+                        defaultValue="usps"
+                        className="bg-black/60 border border-white/15 rounded-full text-xs text-white/80 py-2 px-3 outline-none focus:border-[#00FF41]/40 transition"
+                      >
+                        {CARRIERS.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        name="tracking_number"
+                        placeholder="Tracking number"
+                        required
+                        className="bg-black/60 border border-white/15 rounded-full text-xs text-white/80 py-2 px-3 outline-none focus:border-[#00FF41]/40 transition w-40"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-full bg-[#00FF41] text-black text-xs font-medium hover:bg-[#00FF41]/90 transition"
+                      >
+                        Mark Shipped
+                      </button>
+                    </form>
+                  ) : null}
+
+                  {order.status === "shipped" ? (
                     <form action={updateOrderStatusAction}>
                       <input type="hidden" name="id" value={order.id} />
                       <input type="hidden" name="status" value="fulfilled" />
@@ -118,7 +185,7 @@ export default async function AdminOrdersPage() {
                         type="submit"
                         className="px-4 py-2 rounded-full border border-white/15 text-white/70 text-xs hover:border-white/30 hover:text-white transition"
                       >
-                        Mark Fulfilled
+                        Mark Delivered
                       </button>
                     </form>
                   ) : null}
