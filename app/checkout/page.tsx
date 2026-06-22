@@ -6,6 +6,7 @@ import Script from "next/script";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "@/lib/cart-context";
+import { SHIPPING_TIERS, getShippingTier } from "@/lib/shipping";
 import { createZelleOrderAction, confirmPaypalOrderAction } from "./actions";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
@@ -35,6 +36,7 @@ export default function CheckoutPage() {
   const [shippingState, setShippingState] = useState("");
   const [shippingZip, setShippingZip] = useState("");
   const [shippingCountry, setShippingCountry] = useState("US");
+  const [shippingTier, setShippingTier] = useState<string>("standard");
   const [method, setMethod] = useState<"zelle" | "paypal">("zelle");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export default function CheckoutPage() {
   };
   const formRef = useRef(customer);
   formRef.current = customer;
+  const shippingTierRef = useRef(shippingTier);
+  shippingTierRef.current = shippingTier;
 
   function hasRequiredShippingInfo(c: typeof customer) {
     return Boolean(
@@ -73,7 +77,11 @@ export default function CheckoutPage() {
     price: i.price,
     quantity: i.quantity,
   }));
-  const total = cart.total;
+  const subtotal = cart.total;
+  const shippingCost = getShippingTier(shippingTier).price;
+  const total = subtotal + shippingCost;
+  const totalRef = useRef(total);
+  totalRef.current = total;
 
   async function handleZelleSubmit() {
     if (!hasRequiredShippingInfo(customer)) {
@@ -86,11 +94,11 @@ export default function CheckoutPage() {
       const result = await createZelleOrderAction(
         customer,
         itemsForOrder,
-        total
+        shippingTier
       );
       cart.clear();
       router.push(
-        `/checkout/success?code=${result.orderCode}&method=zelle&total=${total.toFixed(2)}`
+        `/checkout/success?code=${result.orderCode}&method=zelle&total=${result.total.toFixed(2)}`
       );
     } catch {
       setError("Something went wrong placing your order. Please try again.");
@@ -117,7 +125,7 @@ export default function CheckoutPage() {
         }
         setError(null);
         return actions.order.create({
-          purchase_units: [{ amount: { value: total.toFixed(2) } }],
+          purchase_units: [{ amount: { value: totalRef.current.toFixed(2) } }],
         });
       },
       onApprove: async (_data: unknown, actions: any) => {
@@ -128,7 +136,7 @@ export default function CheckoutPage() {
             details.id,
             formRef.current,
             itemsForOrder,
-            total
+            shippingTierRef.current
           );
           cart.clear();
           router.push(`/checkout/success?code=${result.orderCode}&method=paypal`);
@@ -293,9 +301,51 @@ export default function CheckoutPage() {
             />
           </Field>
 
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
-            <span className="text-white/50">Total</span>
-            <span className="text-2xl font-light">${total.toFixed(2)}</span>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40 pt-2 border-t border-white/10 mb-3">
+              Shipping Method
+            </p>
+            <div className="space-y-2">
+              {SHIPPING_TIERS.map((tier) => (
+                <button
+                  key={tier.value}
+                  type="button"
+                  onClick={() => setShippingTier(tier.value)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition ${
+                    shippingTier === tier.value
+                      ? "border-[#00FF41]/50 bg-[#00FF41]/5"
+                      : "border-white/15 hover:border-white/30"
+                  }`}
+                >
+                  <span>
+                    <span
+                      className={`block text-sm ${
+                        shippingTier === tier.value ? "text-[#00FF41]" : "text-white/80"
+                      }`}
+                    >
+                      {tier.label}
+                    </span>
+                    <span className="block text-xs text-white/40 mt-0.5">{tier.eta}</span>
+                  </span>
+                  <span className="text-sm text-white/70">${tier.price.toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/10 space-y-1.5">
+            <div className="flex items-center justify-between text-sm text-white/50">
+              <span>Subtotal</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-white/50">
+              <span>Shipping</span>
+              <span>${shippingCost.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-white/50">Total</span>
+              <span className="text-2xl font-light">${total.toFixed(2)}</span>
+            </div>
           </div>
 
           <div>

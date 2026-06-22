@@ -4,6 +4,7 @@ import { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { getTrackingUrl } from "@/lib/tracking";
+import { getShippingTier } from "@/lib/shipping";
 import { lookupOrderAction } from "./actions";
 
 const STEPS = [
@@ -164,7 +165,15 @@ export default function TrackOrderPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-sm text-white/40">
+              <p className="mt-3 text-sm text-white/50">
+                Subtotal: ${Number(order.subtotal).toFixed(2)}
+              </p>
+              <p className="text-sm text-white/50">
+                Shipping ({getShippingTier(order.shipping_tier).label},{" "}
+                {getShippingTier(order.shipping_tier).eta}): $
+                {Number(order.shipping_cost).toFixed(2)}
+              </p>
+              <p className="mt-1 text-sm text-white/40">
                 Total: ${Number(order.total).toFixed(2)}
               </p>
             </div>

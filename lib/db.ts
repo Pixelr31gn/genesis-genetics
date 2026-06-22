@@ -381,6 +381,9 @@ export type Order = {
   payment_method: string;
   status: string;
   paypal_order_id: string | null;
+  subtotal: number;
+  shipping_tier: string;
+  shipping_cost: number;
   total: number;
   phone: string | null;
   shipping_address1: string | null;
@@ -408,6 +411,9 @@ export type CreateOrderInput = {
   customer_email: string;
   customer_note: string;
   payment_method: "zelle" | "paypal";
+  subtotal: number;
+  shipping_tier: string;
+  shipping_cost: number;
   total: number;
   phone: string;
   shipping_address1: string;
@@ -442,11 +448,13 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     try {
       const rows = await sql`
         INSERT INTO orders (
-          order_code, customer_name, customer_email, customer_note, payment_method, total,
+          order_code, customer_name, customer_email, customer_note, payment_method,
+          subtotal, shipping_tier, shipping_cost, total,
           phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_zip, shipping_country
         )
         VALUES (
-          ${orderCode}, ${input.customer_name}, ${input.customer_email}, ${input.customer_note}, ${input.payment_method}, ${input.total},
+          ${orderCode}, ${input.customer_name}, ${input.customer_email}, ${input.customer_note}, ${input.payment_method},
+          ${input.subtotal}, ${input.shipping_tier}, ${input.shipping_cost}, ${input.total},
           ${input.phone}, ${input.shipping_address1}, ${input.shipping_address2}, ${input.shipping_city}, ${input.shipping_state}, ${input.shipping_zip}, ${input.shipping_country}
         )
         RETURNING *

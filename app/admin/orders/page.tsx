@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getOrderItems, getOrders } from "@/lib/db";
 import { CARRIERS, getTrackingUrl } from "@/lib/tracking";
+import { getShippingTier } from "@/lib/shipping";
 import { markOrderShippedAction, updateOrderStatusAction } from "../actions";
 
 const STATUS_TONE: Record<string, string> = {
@@ -72,6 +73,11 @@ export default async function AdminOrdersPage() {
                   <div className="text-right">
                     <p className="text-xl font-light">
                       ${Number(order.total).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-white/30 mt-0.5">
+                      ${Number(order.subtotal).toFixed(2)} + $
+                      {Number(order.shipping_cost).toFixed(2)} ship (
+                      {getShippingTier(order.shipping_tier).label})
                     </p>
                     <span
                       className={`mt-2 inline-block text-[10px] uppercase tracking-[0.2em] px-3 py-1 border rounded-full ${

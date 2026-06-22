@@ -1,7 +1,9 @@
 "use server";
 
-import { createOrder, markOrderPaidWithPaypal } from "@/lib/db";
+import { createOrder, getOrderItems, markOrderPaidWithPaypal } from "@/lib/db";
 import { verifyPaypalOrder } from "@/lib/paypal";
+import { getShippingTier } from "@/lib/shipping";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export type CheckoutItem = {
   productId: number;
@@ -32,16 +34,27 @@ function toOrderItems(items: CheckoutItem[]) {
   }));
 }
 
+function computeSubtotal(items: CheckoutItem[]): number {
+  return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+}
+
 export async function createZelleOrderAction(
   customer: CheckoutCustomer,
   items: CheckoutItem[],
-  total: number
+  shippingTier: string
 ) {
+  const subtotal = computeSubtotal(items);
+  const tier = getShippingTier(shippingTier);
+  const total = subtotal + tier.price;
+
   const order = await createOrder({
     customer_name: customer.name,
     customer_email: customer.email,
     customer_note: customer.note,
     payment_method: "zelle",
+    subtotal,
+    shipping_tier: tier.value,
+    shipping_cost: tier.price,
     total,
     phone: customer.phone,
     shipping_address1: customer.shippingAddress1,
@@ -52,15 +65,23 @@ export async function createZelleOrderAction(
     shipping_country: customer.shippingCountry,
     items: toOrderItems(items),
   });
-  return { id: order.id, orderCode: order.order_code };
+
+  const orderItems = await getOrderItems(order.id);
+  await sendOrderConfirmationEmail(order, orderItems);
+
+  return { id: order.id, orderCode: order.order_code, total };
 }
 
 export async function confirmPaypalOrderAction(
   paypalOrderId: string,
   customer: CheckoutCustomer,
   items: CheckoutItem[],
-  total: number
+  shippingTier: string
 ) {
+  const subtotal = computeSubtotal(items);
+  const tier = getShippingTier(shippingTier);
+  const total = subtotal + tier.price;
+
   const verified = await verifyPaypalOrder(paypalOrderId, total);
   if (!verified) {
     throw new Error("PayPal payment could not be verified");
@@ -71,6 +92,9 @@ export async function confirmPaypalOrderAction(
     customer_email: customer.email,
     customer_note: customer.note,
     payment_method: "paypal",
+    subtotal,
+    shipping_tier: tier.value,
+    shipping_cost: tier.price,
     total,
     phone: customer.phone,
     shipping_address1: customer.shippingAddress1,
@@ -82,5 +106,9 @@ export async function confirmPaypalOrderAction(
     items: toOrderItems(items),
   });
   await markOrderPaidWithPaypal(order.id, paypalOrderId);
-  return { id: order.id, orderCode: order.order_code };
+
+  const orderItems = await getOrderItems(order.id);
+  await sendOrderConfirmationEmail(order, orderItems);
+
+  return { id: order.id, orderCode: order.order_code, total };
 }

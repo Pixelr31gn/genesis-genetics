@@ -9,6 +9,7 @@ import {
   createProduct,
   deletePost,
   deleteProduct,
+  getOrderById,
   markOrderShipped,
   setProductOrder,
   setProductsForPost,
@@ -19,6 +20,7 @@ import {
   updateProduct,
 } from "@/lib/db";
 import type { ImageInput, PostInput, ProductInput } from "@/lib/db";
+import { sendShippedEmail } from "@/lib/email";
 
 async function requireSession() {
   const cookieStore = await cookies();
@@ -122,6 +124,8 @@ export async function markOrderShippedAction(formData: FormData) {
   const carrier = String(formData.get("carrier") || "other");
   const trackingNumber = String(formData.get("tracking_number") || "");
   await markOrderShipped(id, carrier, trackingNumber);
+  const order = await getOrderById(id);
+  if (order) await sendShippedEmail(order);
   revalidatePath("/admin/orders");
 }
 
