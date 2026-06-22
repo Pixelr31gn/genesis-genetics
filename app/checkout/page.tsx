@@ -74,6 +74,12 @@ export default function CheckoutPage() {
     }
 
     const buttons = window.paypal.Buttons({
+      style: {
+        color: "black",
+        shape: "pill",
+        label: "paypal",
+        height: 48,
+      },
       createOrder: (_data: unknown, actions: any) => {
         const { name, email } = formRef.current;
         if (!name.trim() || !email.trim()) {
@@ -224,7 +230,9 @@ export default function CheckoutPage() {
               </button>
             </div>
           ) : (
-            <div ref={paypalRef} className="min-h-[50px]" />
+            <div className="rounded-2xl border border-[#00FF41]/25 bg-[#00FF41]/[0.04] p-3 shadow-[0_0_24px_rgba(0,255,65,0.08)]">
+              <div ref={paypalRef} className="min-h-[50px]" />
+            </div>
           )}
         </div>
       </section>
