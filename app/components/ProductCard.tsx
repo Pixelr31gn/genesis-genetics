@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import type { Product } from "@/lib/db";
+import { getDiscountedPrice } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -56,6 +57,11 @@ export default function ProductCard({
     mouseY.set(0.5);
   }
 
+  const hasDiscount = product.discount_percent > 0;
+  const discountedPrice = hasDiscount
+    ? getDiscountedPrice(Number(product.price), product.discount_percent)
+    : null;
+
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -64,7 +70,7 @@ export default function ProductCard({
         productId: product.id,
         slug: product.slug,
         name: product.name,
-        price: Number(product.price),
+        price: discountedPrice ?? Number(product.price),
         hasImage: Boolean(product.image_type),
       },
       quantity
@@ -129,7 +135,16 @@ export default function ProductCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 
-            <div className="absolute top-5 left-5 flex items-center gap-2">
+            <div className="absolute top-5 left-5 flex flex-col items-start gap-2">
+              {hasDiscount ? (
+                <motion.span
+                  animate={{ scale: [1, 1.07, 1] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-[#00FF41] text-black rounded-full font-bold shadow-[0_0_18px_rgba(0,255,65,0.55)]"
+                >
+                  -{product.discount_percent}% OFF
+                </motion.span>
+              ) : null}
               <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-black/70 border border-white/10 rounded-full text-white/70">
                 {product.category}
               </span>
@@ -162,9 +177,20 @@ export default function ProductCard({
                 <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">
                   Price
                 </p>
-                <p className="text-2xl font-light text-white">
-                  ${Number(product.price).toFixed(2)}
-                </p>
+                {hasDiscount ? (
+                  <div className="flex items-baseline justify-end gap-2">
+                    <span className="text-sm text-white/40 line-through">
+                      ${Number(product.price).toFixed(2)}
+                    </span>
+                    <span className="text-2xl font-light text-[#00FF41]">
+                      ${discountedPrice!.toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-light text-white">
+                    ${Number(product.price).toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
 

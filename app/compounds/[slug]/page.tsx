@@ -4,6 +4,7 @@ import Footer from "../../components/Footer";
 import ProductCard from "../../components/ProductCard";
 import AddToCartControls from "./AddToCartControls";
 import { getProductBySlug, getRelatedProducts } from "@/lib/db";
+import { getDiscountedPrice } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,11 @@ export default async function CompoundPage({
 
   const related = await getRelatedProducts(product.id);
 
+  const hasDiscount = product.discount_percent > 0;
+  const discountedPrice = hasDiscount
+    ? getDiscountedPrice(Number(product.price), product.discount_percent)
+    : null;
+
   const stockLabel =
     product.stock === 0
       ? "Out of Stock"
@@ -61,9 +67,16 @@ export default async function CompoundPage({
 
           {/* DETAILS */}
           <div>
-            <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 border border-white/10 rounded-full text-white/60">
-              {product.category}
-            </span>
+            <div className="flex items-center gap-3">
+              {hasDiscount ? (
+                <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-[#00FF41] text-black rounded-full font-bold shadow-[0_0_18px_rgba(0,255,65,0.55)]">
+                  -{product.discount_percent}% OFF
+                </span>
+              ) : null}
+              <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 border border-white/10 rounded-full text-white/60">
+                {product.category}
+              </span>
+            </div>
 
             <h1 className="mt-5 text-4xl md:text-5xl font-semibold tracking-tight text-[#00FF41]">
               {product.name}
@@ -76,9 +89,20 @@ export default async function CompoundPage({
               <Spec label="Stock" value={stockLabel} />
             </div>
 
-            <p className="mt-8 text-3xl font-light">
-              ${Number(product.price).toFixed(2)}
-            </p>
+            {hasDiscount ? (
+              <div className="mt-8 flex items-baseline gap-3">
+                <span className="text-xl text-white/40 line-through">
+                  ${Number(product.price).toFixed(2)}
+                </span>
+                <span className="text-3xl font-light text-[#00FF41]">
+                  ${discountedPrice!.toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <p className="mt-8 text-3xl font-light">
+                ${Number(product.price).toFixed(2)}
+              </p>
+            )}
 
             {product.description ? (
               <p className="mt-6 text-white/50 leading-relaxed">
@@ -91,7 +115,7 @@ export default async function CompoundPage({
                 productId={product.id}
                 slug={product.slug}
                 name={product.name}
-                price={Number(product.price)}
+                price={discountedPrice ?? Number(product.price)}
                 hasImage={Boolean(product.image_type)}
               />
             </div>

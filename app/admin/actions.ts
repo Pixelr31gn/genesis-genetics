@@ -7,6 +7,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import {
   createProduct,
   deleteProduct,
+  setProductOrder,
   setRelatedProducts,
   updateOrderStatus,
   updateProduct,
@@ -22,6 +23,7 @@ async function requireSession() {
 }
 
 function readProductInput(formData: FormData): ProductInput {
+  const discount = Number(formData.get("discount_percent") || 0);
   return {
     name: String(formData.get("name") || ""),
     category: String(formData.get("category") || "Research Compound"),
@@ -30,6 +32,7 @@ function readProductInput(formData: FormData): ProductInput {
     price: Number(formData.get("price") || 0),
     description: String(formData.get("description") || ""),
     stock: Number(formData.get("stock") || 0),
+    discount_percent: Math.min(30, Math.max(0, Math.round(discount))),
   };
 }
 
@@ -69,6 +72,13 @@ export async function deleteProductAction(formData: FormData) {
   await requireSession();
   const id = Number(formData.get("id"));
   await deleteProduct(id);
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function reorderProductsAction(orderedIds: number[]) {
+  await requireSession();
+  await setProductOrder(orderedIds);
   revalidatePath("/");
   revalidatePath("/admin");
 }

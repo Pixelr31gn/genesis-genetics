@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getProducts } from "@/lib/db";
-import { deleteProductAction, logout } from "./actions";
+import { logout } from "./actions";
+import ProductReorderList from "./ProductReorderList";
 
 export default async function AdminDashboard() {
   const cookieStore = await cookies();
@@ -53,62 +54,7 @@ export default async function AdminDashboard() {
             No products yet. Add your first compound to get started.
           </div>
         ) : (
-          <div className="border border-white/10 rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-white/40 text-xs uppercase tracking-[0.2em] bg-white/[0.03]">
-                  <th className="px-5 py-4"></th>
-                  <th className="px-5 py-4">Name</th>
-                  <th className="px-5 py-4">Category</th>
-                  <th className="px-5 py-4">Price</th>
-                  <th className="px-5 py-4">Stock</th>
-                  <th className="px-5 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} className="border-t border-white/5 hover:bg-white/[0.02]">
-                    <td className="px-5 py-4">
-                      {p.image_type ? (
-                        <img
-                          src={`/api/images/${p.id}`}
-                          alt={p.name}
-                          className="h-10 w-10 rounded-lg object-cover border border-white/10"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-lg border border-white/10 bg-white/[0.03]" />
-                      )}
-                    </td>
-                    <td className="px-5 py-4">{p.name}</td>
-                    <td className="px-5 py-4 text-white/50">{p.category}</td>
-                    <td className="px-5 py-4 text-white/50">
-                      ${Number(p.price).toFixed(2)}
-                    </td>
-                    <td className="px-5 py-4 text-white/50">{p.stock}</td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-4">
-                        <Link
-                          href={`/admin/products/${p.id}`}
-                          className="text-[#00FF41]/80 hover:text-[#00FF41] transition"
-                        >
-                          Edit
-                        </Link>
-                        <form action={deleteProductAction}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <button
-                            type="submit"
-                            className="text-white/40 hover:text-red-400 transition"
-                          >
-                            Delete
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ProductReorderList initialProducts={products} />
         )}
       </div>
     </main>

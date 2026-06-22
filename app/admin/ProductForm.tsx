@@ -66,17 +66,33 @@ export default function ProductForm({
         </Field>
       </div>
 
-      <Field label="Price (USD)">
-        <input
-          name="price"
-          type="number"
-          step="0.01"
-          min={0}
-          required
-          defaultValue={product?.price}
-          className="field"
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-5">
+        <Field label="Price (USD)">
+          <input
+            name="price"
+            type="number"
+            step="0.01"
+            min={0}
+            required
+            defaultValue={product?.price}
+            className="field"
+          />
+        </Field>
+        <Field label="Discount (%)">
+          <input
+            name="discount_percent"
+            type="number"
+            step="1"
+            min={0}
+            max={30}
+            defaultValue={product?.discount_percent ?? 0}
+            className="field"
+          />
+          <p className="text-xs text-white/30 mt-2">
+            0 = no discount. Max 30%. Shows as a sale badge on the storefront.
+          </p>
+        </Field>
+      </div>
 
       <Field label="Image">
         <ImageField

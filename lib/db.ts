@@ -20,6 +20,8 @@ export type Product = {
   image_type: string | null;
   description: string | null;
   stock: number;
+  sort_order: number;
+  discount_percent: number;
   created_at: string;
 };
 
@@ -31,6 +33,7 @@ export type ProductInput = {
   price: number;
   description: string;
   stock: number;
+  discount_percent: number;
 };
 
 export type ImageInput = {
@@ -63,16 +66,16 @@ async function generateUniqueSlug(name: string, excludeId?: number): Promise<str
 
 export async function getProducts(): Promise<Product[]> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
     FROM products
-    ORDER BY created_at DESC
+    ORDER BY sort_order ASC, created_at DESC
   `;
   return rows as Product[];
 }
 
 export async function getProductById(id: number): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
     FROM products
     WHERE id = ${id}
   `;
@@ -81,11 +84,19 @@ export async function getProductById(id: number): Promise<Product | null> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
     FROM products
     WHERE slug = ${slug}
   `;
   return (rows[0] as Product) ?? null;
+}
+
+export async function setProductOrder(orderedIds: number[]): Promise<void> {
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      sql`UPDATE products SET sort_order = ${index} WHERE id = ${id}`
+    )
+  );
 }
 
 export async function getProductImage(
@@ -104,12 +115,15 @@ export async function createProduct(
   image: ImageInput | null
 ): Promise<Product> {
   const slug = await generateUniqueSlug(data.name);
+  const [{ next_order }] = await sql`
+    SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM products
+  `;
   const rows = await sql`
     INSERT INTO products
-      (name, slug, category, dosage, purity, price, description, stock, image_data, image_type)
+      (name, slug, category, dosage, purity, price, description, stock, discount_percent, sort_order, image_data, image_type)
     VALUES
-      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${image?.data ?? null}, ${image?.type ?? null})
-    RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${data.discount_percent}, ${next_order}, ${image?.data ?? null}, ${image?.type ?? null})
+    RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
   `;
   return rows[0] as Product;
 }
@@ -131,10 +145,11 @@ export async function updateProduct(
             price = ${data.price},
             description = ${data.description},
             stock = ${data.stock},
+            discount_percent = ${data.discount_percent},
             image_data = ${image.data},
             image_type = ${image.type}
         WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+        RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
       `
     : await sql`
         UPDATE products
@@ -145,9 +160,10 @@ export async function updateProduct(
             purity = ${data.purity},
             price = ${data.price},
             description = ${data.description},
-            stock = ${data.stock}
+            stock = ${data.stock},
+            discount_percent = ${data.discount_percent}
         WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, created_at
+        RETURNING id, name, slug, category, dosage, purity, price, image_type, description, stock, sort_order, discount_percent, created_at
       `;
   return rows[0] as Product;
 }
