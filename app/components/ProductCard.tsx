@@ -156,19 +156,10 @@ export default function ProductCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 
-            <div className="absolute top-5 left-5 flex flex-col items-start gap-2">
+            <div className="absolute top-5 left-5">
               <span className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-black/70 border border-white/10 rounded-full text-white/70">
                 {product.category}
               </span>
-              {hasDiscount ? (
-                <motion.span
-                  animate={{ scale: [1, 1.07, 1] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                  className="text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-[#00FF41] text-black rounded-full font-bold shadow-[0_0_18px_rgba(0,255,65,0.55)]"
-                >
-                  -{product.discount_percent}% OFF
-                </motion.span>
-              ) : null}
             </div>
 
             <div className="absolute top-5 right-5">
@@ -178,6 +169,24 @@ export default function ProductCard({
                 {stockLabel}
               </span>
             </div>
+
+            {hasDiscount ? (
+              // Golden ratio (1/phi = ~61.8%) sets the vertical placement so
+              // the badge lands beside the name, sharing the In Stock tag's
+              // right-5 inset for a vertically aligned right-edge column.
+              <div
+                className="absolute right-5 -translate-y-1/2"
+                style={{ top: "61.8%" }}
+              >
+                <motion.span
+                  animate={{ scale: [1, 1.07, 1] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="inline-block text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-[#00FF41] text-black rounded-full font-bold shadow-[0_0_18px_rgba(0,255,65,0.55)]"
+                >
+                  -{product.discount_percent}% OFF
+                </motion.span>
+              </div>
+            ) : null}
 
             <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-1 transition-transform duration-500 group-hover:translate-y-0">
               <h3 className="text-2xl font-semibold tracking-tight text-[#00FF41]">
