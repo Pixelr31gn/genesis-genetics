@@ -96,7 +96,7 @@ export default function ProductForm({
 
       <Field label="Image">
         <ImageField
-          currentImageUrl={product?.image_url ?? null}
+          currentImageUrl={product?.image_type ? `/api/images/${product.id}` : null}
         />
       </Field>
 

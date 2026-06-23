@@ -59,9 +59,9 @@ export default async function CompoundPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* IMAGE */}
           <div className="relative aspect-[4/5] rounded-[28px] overflow-hidden border border-white/10 bg-white/[0.03]">
-            {product.image_url ? (
+            {product.image_type ? (
               <img
-                src={product.image_url}
+                src={`/api/images/${product.id}`}
                 alt={product.name}
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -120,7 +120,7 @@ export default async function CompoundPage({
                 slug={product.slug}
                 name={product.name}
                 price={discountedPrice ?? Number(product.price)}
-                imageUrl={product.image_url}
+                hasImage={Boolean(product.image_type)}
               />
             </div>
           </div>

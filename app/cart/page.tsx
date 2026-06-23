@@ -42,9 +42,9 @@ export default function CartPage() {
                     href={`/compounds/${item.slug}`}
                     className="h-16 w-16 rounded-xl overflow-hidden border border-white/10 bg-white/[0.03] shrink-0"
                   >
-                    {item.imageUrl ? (
+                    {item.hasImage ? (
                       <img
-                        src={item.imageUrl}
+                        src={`/api/images/${item.productId}`}
                         alt={item.name}
                         className="h-full w-full object-cover"
                       />

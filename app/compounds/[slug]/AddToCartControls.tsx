@@ -10,20 +10,20 @@ export default function AddToCartControls({
   slug,
   name,
   price,
-  imageUrl,
+  hasImage,
 }: {
   productId: number;
   slug: string;
   name: string;
   price: number;
-  imageUrl: string | null;
+  hasImage: boolean;
 }) {
   const cart = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   function handleAddToCart() {
-    cart.addItem({ productId, slug, name, price, imageUrl }, quantity);
+    cart.addItem({ productId, slug, name, price, hasImage }, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }

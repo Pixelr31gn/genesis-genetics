@@ -3,7 +3,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { put } from "@vercel/blob";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import {
   createPost,
@@ -20,7 +19,7 @@ import {
   updatePost,
   updateProduct,
 } from "@/lib/db";
-import type { PostInput, ProductInput } from "@/lib/db";
+import type { ImageInput, PostInput, ProductInput } from "@/lib/db";
 import { sendShippedEmail } from "@/lib/email";
 
 async function requireSession() {
@@ -45,14 +44,11 @@ function readProductInput(formData: FormData): ProductInput {
   };
 }
 
-async function uploadProductImage(formData: FormData): Promise<string | null> {
+async function readImageInput(formData: FormData): Promise<ImageInput | null> {
   const file = formData.get("imageFile");
   if (!(file instanceof File) || file.size === 0) return null;
-  const blob = await put(`products/${crypto.randomUUID()}-${file.name}`, file, {
-    access: "public",
-    contentType: file.type || "application/octet-stream",
-  });
-  return blob.url;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return { data: buffer, type: file.type || "application/octet-stream" };
 }
 
 function readRelatedIds(formData: FormData): number[] {
@@ -80,8 +76,8 @@ function readRelatedPostIds(formData: FormData): number[] {
 
 export async function createProductAction(formData: FormData) {
   await requireSession();
-  const imageUrl = await uploadProductImage(formData);
-  const product = await createProduct(readProductInput(formData), imageUrl);
+  const image = await readImageInput(formData);
+  const product = await createProduct(readProductInput(formData), image);
   await setRelatedProducts(product.id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");
@@ -91,8 +87,8 @@ export async function createProductAction(formData: FormData) {
 export async function updateProductAction(formData: FormData) {
   await requireSession();
   const id = Number(formData.get("id"));
-  const imageUrl = await uploadProductImage(formData);
-  await updateProduct(id, readProductInput(formData), imageUrl);
+  const image = await readImageInput(formData);
+  await updateProduct(id, readProductInput(formData), image);
   await setRelatedProducts(id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");

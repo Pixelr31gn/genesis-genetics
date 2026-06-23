@@ -76,7 +76,7 @@ export default function ProductCard({
         slug: product.slug,
         name: product.name,
         price: discountedPrice ?? Number(product.price),
-        imageUrl: product.image_url,
+        hasImage: Boolean(product.image_type),
       },
       quantity
     );
@@ -144,9 +144,9 @@ export default function ProductCard({
 
           {/* IMAGE */}
           <div className="relative aspect-[4/5] overflow-hidden">
-            {product.image_url ? (
+            {product.image_type ? (
               <img
-                src={product.image_url}
+                src={`/api/images/${product.id}`}
                 alt={product.name}
                 className="absolute inset-0 w-full h-full object-cover scale-105 transition-transform duration-700 ease-out group-hover:scale-115"
               />

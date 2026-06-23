@@ -81,9 +81,9 @@ export default function ProductReorderList({
                   ⠿
                 </div>
                 <div className="w-10">
-                  {p.image_url ? (
+                  {p.image_type ? (
                     <img
-                      src={p.image_url}
+                      src={`/api/images/${p.id}`}
                       alt={p.name}
                       className="h-10 w-10 rounded-lg object-cover border border-white/10"
                     />
