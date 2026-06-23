@@ -14,11 +14,13 @@
     "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs",
     "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs",
     "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs",
-    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs"
+    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs",
+    "db:migrate-images-blob": "node --env-file=.env.local scripts/migrate-images-to-blob.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.4.1",
     "framer-motion": "^12.40.0",
     "marked": "^18.0.5",
     "next": "16.2.9",
