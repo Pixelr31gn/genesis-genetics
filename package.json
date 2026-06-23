@@ -14,8 +14,7 @@
     "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs",
     "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs",
     "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs",
-    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs",
-    "db:migrate-images-blob": "node --env-file=.env.local scripts/migrate-images-to-blob.mjs"
+    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
