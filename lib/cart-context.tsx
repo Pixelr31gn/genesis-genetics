@@ -7,7 +7,7 @@ export type CartItem = {
   slug: string;
   name: string;
   price: number;
-  hasImage: boolean;
+  imageUrl: string | null;
   quantity: number;
 };
 
