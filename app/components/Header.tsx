@@ -1,4 +1,5 @@
 import CartIcon from "./CartIcon";
+import HeaderSearch from "./HeaderSearch";
 
 export default function Header() {
   return (
@@ -31,10 +32,8 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <HeaderSearch />
           <CartIcon />
-          <button className="px-4 py-2 border border-[#00FF41]/30 text-[#00FF41] text-sm rounded-full hover:bg-[#00FF41] hover:text-black transition">
-            Request Access
-          </button>
         </div>
       </div>
     </header>

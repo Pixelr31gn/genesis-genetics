@@ -1,7 +1,13 @@
 import { getProducts } from "@/lib/db";
-import ProductCard from "./ProductCard";
+import CatalogBrowser from "./CatalogBrowser";
 
-export default async function ProductGrid() {
+export default async function ProductGrid({
+  initialQuery = "",
+  initialCategory = "all",
+}: {
+  initialQuery?: string;
+  initialCategory?: string;
+}) {
   const products = await getProducts();
 
   if (products.length === 0) {
@@ -19,10 +25,10 @@ export default async function ProductGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {products.map((product, i) => (
-        <ProductCard key={product.id} product={product} index={i} />
-      ))}
-    </div>
+    <CatalogBrowser
+      products={products}
+      initialQuery={initialQuery}
+      initialCategory={initialCategory}
+    />
   );
 }

@@ -28,6 +28,7 @@ export default function ProductCard({
   const cart = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const isScrollActive = useInView(ref, {
     amount: 0.5,
     margin: "-20% 0px -20% 0px",
@@ -83,6 +84,9 @@ export default function ProductCard({
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
+
+  const description = product.description || "";
+  const isLongDescription = description.length > 90;
 
   const stockLabel =
     product.stock === 0
@@ -219,11 +223,37 @@ export default function ProductCard({
               </div>
             </div>
 
-            {product.description ? (
-              <p className="mt-4 text-sm text-white/40 leading-relaxed line-clamp-2">
-                {product.description}
-              </p>
-            ) : null}
+            <div className="mt-4 min-h-[2.75rem]">
+              {description ? (
+                <p
+                  className={`text-sm text-white/40 leading-relaxed ${
+                    expanded ? "" : "line-clamp-2"
+                  }`}
+                >
+                  {description}
+                </p>
+              ) : null}
+              {isLongDescription ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setExpanded((v) => !v);
+                  }}
+                  className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-[#00FF41] transition"
+                >
+                  {expanded ? "Less" : "More"}
+                  <span
+                    className={`inline-block transition-transform duration-200 ${
+                      expanded ? "rotate-180" : ""
+                    }`}
+                  >
+                    ↓
+                  </span>
+                </button>
+              ) : null}
+            </div>
 
             <div
               className="mt-6 flex items-center gap-3"
