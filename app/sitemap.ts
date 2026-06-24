@@ -10,6 +10,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE_URL, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE_URL}/standards`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/research`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/quality-control`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/certificate-of-analysis`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/shipping-cold-chain`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/categories/regeneration`, changeFrequency: "weekly", priority: 0.7 },
   ];
 
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({

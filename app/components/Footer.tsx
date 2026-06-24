@@ -6,7 +6,16 @@ export default function Footer() {
         <p className="text-xs text-white/20 text-center sm:text-right max-w-md">
           For research use only. Not for human or veterinary consumption.
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap justify-center">
+          <a href="/quality-control" className="text-white/20 hover:text-white/50 transition">
+            Quality Control
+          </a>
+          <a href="/certificate-of-analysis" className="text-white/20 hover:text-white/50 transition">
+            COA
+          </a>
+          <a href="/shipping-cold-chain" className="text-white/20 hover:text-white/50 transition">
+            Shipping
+          </a>
           <a href="/track-order" className="text-white/20 hover:text-white/50 transition">
             Track Order
           </a>
