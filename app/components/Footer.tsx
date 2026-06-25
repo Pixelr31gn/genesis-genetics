@@ -16,6 +16,9 @@ export default function Footer() {
           <a href="/shipping-cold-chain" className="text-white/20 hover:text-white/50 transition">
             Shipping
           </a>
+          <a href="/terms" className="text-white/20 hover:text-white/50 transition">
+            Terms &amp; Conditions
+          </a>
           <a href="/track-order" className="text-white/20 hover:text-white/50 transition">
             Track Order
           </a>
