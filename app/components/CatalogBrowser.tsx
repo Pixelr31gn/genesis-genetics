@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Product } from "@/lib/db";
 import { categorySlug, getCategoryIntro, sortCategories } from "@/lib/category-content";
-import ProductCard from "./ProductCard";
+import CategoryCarousel from "./CategoryCarousel";
 
 export default function CatalogBrowser({
   products,
@@ -43,7 +43,7 @@ export default function CatalogBrowser({
           placeholder="Search by name, category, or keyword (e.g. GLP-1, recovery)…"
           className="w-full sm:max-w-sm bg-white/[0.03] border border-white/15 rounded-full text-sm text-white/80 placeholder:text-white/30 outline-none focus:border-[#00FF41]/40 transition px-5 py-3"
         />
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             type="button"
             onClick={() => setActiveCategory("all")}
@@ -93,16 +93,10 @@ export default function CatalogBrowser({
             <p className="mt-2 mb-8 text-sm text-white/40 max-w-2xl leading-relaxed">
               {getCategoryIntro(category)}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {categoryProducts.map((product, i) => (
-                <div
-                  key={product.id}
-                  className={matchesQuery(product) ? "" : "hidden"}
-                >
-                  <ProductCard product={product} index={i} />
-                </div>
-              ))}
-            </div>
+            <CategoryCarousel
+              products={categoryProducts}
+              visibleIds={new Set(visibleProducts.map((p) => p.id))}
+            />
           </section>
         );
       })}

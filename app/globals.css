@@ -54,3 +54,12 @@ body {
 .field:focus {
   border-color: rgba(0, 255, 65, 0.4);
 }
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import ProductCard from "../../components/ProductCard";
+import CategoryCarousel from "../../components/CategoryCarousel";
 import FAQSection from "../../components/FAQSection";
 import { getProducts, getPosts } from "@/lib/db";
 
@@ -69,11 +69,10 @@ export default async function RegenerationCategoryPage() {
             No products currently listed in this category.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
-            ))}
-          </div>
+          <CategoryCarousel
+            products={products}
+            visibleIds={new Set(products.map((p) => p.id))}
+          />
         )}
       </section>
 
