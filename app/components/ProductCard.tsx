@@ -13,6 +13,7 @@ import {
 import type { Product } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
+import { useCardViewTracking, useHoverTracking } from "@/lib/product-interest-client";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const QUANTITIES = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -33,6 +34,8 @@ export default function ProductCard({
     amount: 0.5,
     margin: "-20% 0px -20% 0px",
   });
+  useCardViewTracking(product.id, ref);
+  const { onHoverStart, onHoverEnd } = useHoverTracking(product.id);
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -61,6 +64,7 @@ export default function ProductCard({
   function handleMouseLeave() {
     mouseX.set(0.5);
     mouseY.set(0.5);
+    onHoverEnd();
   }
 
   const hasDiscount = product.discount_percent > 0;
@@ -114,6 +118,7 @@ export default function ProductCard({
         <motion.div
           ref={ref}
           onMouseMove={handleMouseMove}
+          onMouseEnter={onHoverStart}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           whileHover={{ scale: 1.015 }}

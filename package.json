@@ -15,7 +15,8 @@
     "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs",
     "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs",
     "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs",
-    "db:migrate-click-events": "node --env-file=.env.local scripts/add-click-events.mjs"
+    "db:migrate-click-events": "node --env-file=.env.local scripts/add-click-events.mjs",
+    "db:migrate-product-interest": "node --env-file=.env.local scripts/add-product-interest.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

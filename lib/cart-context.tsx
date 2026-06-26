@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { trackProductInterest } from "./product-interest-client";
 
 export type CartItem = {
   productId: number;
@@ -55,6 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...item, quantity }];
     });
+    trackProductInterest(item.productId, "add_to_cart");
   }
 
   function updateQuantity(productId: number, quantity: number) {

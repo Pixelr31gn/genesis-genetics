@@ -584,3 +584,101 @@ export async function getTrackedPaths(): Promise<{ path: string; count: number }
   `;
   return rows.map((r) => ({ path: r.path as string, count: Number(r.count) }));
 }
+
+/* =========================
+   PRODUCT INTEREST (cookie-free)
+========================= */
+
+export type InterestEventType = "card_view" | "card_hover" | "detail_view" | "add_to_cart";
+
+export async function recordProductInterestEvent(
+  productId: number,
+  eventType: InterestEventType
+): Promise<void> {
+  await sql`
+    INSERT INTO product_interest_events (product_id, event_type)
+    VALUES (${productId}, ${eventType})
+  `;
+}
+
+export type ProductInterestRow = Product & {
+  views: number;
+  hovers: number;
+  detail_views: number;
+  add_to_carts: number;
+  purchases: number;
+  revenue: number;
+  score: number;
+};
+
+// Weighted toward steps that mean more: a hover means more than a glance,
+// a purchase means far more than an add-to-cart. Score is relative to
+// whichever product has the most weighted activity in the window, not an
+// absolute scale, since there's no fixed "good" number to compare against.
+export async function getProductInterestRanking(days = 30): Promise<ProductInterestRow[]> {
+  const rows = await sql`
+    WITH events AS (
+      SELECT product_id,
+        COUNT(*) FILTER (WHERE event_type = 'card_view') AS views,
+        COUNT(*) FILTER (WHERE event_type = 'card_hover') AS hovers,
+        COUNT(*) FILTER (WHERE event_type = 'detail_view') AS detail_views,
+        COUNT(*) FILTER (WHERE event_type = 'add_to_cart') AS add_to_carts
+      FROM product_interest_events
+      WHERE created_at > now() - (${days}::text || ' days')::interval
+      GROUP BY product_id
+    ),
+    purchases AS (
+      SELECT oi.product_id,
+        COUNT(*) AS purchases,
+        SUM(oi.unit_price * oi.quantity) AS revenue
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      WHERE o.status IN ('paid', 'shipped')
+        AND o.created_at > now() - (${days}::text || ' days')::interval
+      GROUP BY oi.product_id
+    )
+    SELECT
+      p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url,
+      p.description, p.stock, p.sort_order, p.discount_percent, p.created_at,
+      COALESCE(e.views, 0) AS views,
+      COALESCE(e.hovers, 0) AS hovers,
+      COALESCE(e.detail_views, 0) AS detail_views,
+      COALESCE(e.add_to_carts, 0) AS add_to_carts,
+      COALESCE(pu.purchases, 0) AS purchases,
+      COALESCE(pu.revenue, 0) AS revenue
+    FROM products p
+    LEFT JOIN events e ON e.product_id = p.id
+    LEFT JOIN purchases pu ON pu.product_id = p.id
+  `;
+
+  const withRaw = rows.map((r) => {
+    const views = Number(r.views);
+    const hovers = Number(r.hovers);
+    const detail_views = Number(r.detail_views);
+    const add_to_carts = Number(r.add_to_carts);
+    const purchases = Number(r.purchases);
+    const raw = views * 1 + hovers * 2 + detail_views * 3 + add_to_carts * 8 + purchases * 20;
+    return {
+      ...(r as unknown as Product),
+      views,
+      hovers,
+      detail_views,
+      add_to_carts,
+      purchases,
+      revenue: Number(r.revenue),
+      raw,
+    };
+  });
+
+  const maxRaw = Math.max(1, ...withRaw.map((r) => r.raw));
+  return withRaw
+    .sort((a, b) => b.raw - a.raw)
+    .map(({ raw, ...rest }) => ({ ...rest, score: Math.round((raw / maxRaw) * 100) }));
+}
+
+export async function getTrendingProducts(limit = 6, days = 30): Promise<Product[]> {
+  const ranking = await getProductInterestRanking(days);
+  return ranking
+    .filter((r) => r.stock > 0 && r.views + r.hovers + r.detail_views + r.add_to_carts + r.purchases > 0)
+    .slice(0, limit);
+}

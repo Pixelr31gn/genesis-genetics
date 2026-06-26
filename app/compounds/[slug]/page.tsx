@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import ProductCard from "../../components/ProductCard";
 import AddToCartControls from "./AddToCartControls";
 import ProductSeoContent from "./ProductSeoContent";
-import { getPostsForProduct, getProductBySlug, getRelatedProducts } from "@/lib/db";
+import {
+  getPostsForProduct,
+  getProductBySlug,
+  getRelatedProducts,
+  recordProductInterestEvent,
+} from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
+import { isLikelyBot } from "@/lib/bot-detect";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +42,15 @@ export default async function CompoundPage({
     notFound();
   }
 
-  const [related, researchPosts] = await Promise.all([
+  const [related, researchPosts, headerList] = await Promise.all([
     getRelatedProducts(product.id),
     getPostsForProduct(product.id),
+    headers(),
   ]);
+
+  if (!isLikelyBot(headerList.get("user-agent"))) {
+    recordProductInterestEvent(product.id, "detail_view").catch(() => {});
+  }
 
   const hasDiscount = product.discount_percent > 0;
   const discountedPrice = hasDiscount

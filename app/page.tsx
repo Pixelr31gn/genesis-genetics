@@ -4,7 +4,9 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ProductGrid from "./components/ProductGrid";
 import ProductGridSkeleton from "./components/ProductGridSkeleton";
+import ProductCard from "./components/ProductCard";
 import { IconPurity, IconFlask, IconDocument, IconSnow } from "./components/Icons";
+import { getTrendingProducts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,7 @@ export default async function Home({
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
   const { q, category } = await searchParams;
+  const trending = await getTrendingProducts(6);
 
   return (
     <main className="bg-black text-white min-h-screen selection:bg-[#00FF41]/30">
@@ -82,6 +85,25 @@ export default async function Home({
           ))}
         </div>
       </section>
+
+      {/* =========================
+          TRENDING NOW
+      ========================= */}
+      {trending.length > 0 ? (
+        <section className="px-6 pb-20 max-w-6xl mx-auto">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#00FF41]/60 mb-2">
+            Trending Now
+          </p>
+          <h2 className="text-2xl md:text-3xl font-light mb-10">
+            Customers Are Looking At
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {trending.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* =========================
           PRODUCTS

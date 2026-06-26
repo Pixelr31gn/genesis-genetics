@@ -45,6 +45,12 @@ export default async function AdminDashboard() {
               Heatmap
             </Link>
             <Link
+              href="/admin/interest"
+              className="px-4 py-2 rounded-full border border-white/15 text-white/60 text-sm hover:border-white/30 hover:text-white transition"
+            >
+              Interest
+            </Link>
+            <Link
               href="/admin/new"
               className="px-4 py-2 rounded-full bg-[#00FF41] text-black text-sm font-medium hover:bg-[#00FF41]/90 transition"
             >
