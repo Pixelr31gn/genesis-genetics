@@ -14,7 +14,8 @@
     "db:migrate-research-posts": "node --env-file=.env.local scripts/add-research-posts.mjs",
     "db:migrate-shipping-tracking": "node --env-file=.env.local scripts/add-shipping-tracking.mjs",
     "db:migrate-shipping-cost": "node --env-file=.env.local scripts/add-shipping-cost.mjs",
-    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs"
+    "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs",
+    "db:migrate-click-events": "node --env-file=.env.local scripts/add-click-events.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -25,7 +26,8 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "resend": "^6.14.0"
+    "resend": "^6.14.0",
+    "simpleheat": "^0.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

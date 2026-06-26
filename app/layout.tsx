@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/lib/cart-context";
 import LegalGate from "./components/LegalGate";
+import ClickTracker from "./components/ClickTracker";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <LegalGate />
+        <ClickTracker />
         <CartProvider>{children}</CartProvider>
         <Analytics />
       </body>

@@ -523,3 +523,64 @@ export async function getOrderByCodeAndEmail(
   `;
   return (rows[0] as Order) ?? null;
 }
+
+/* =========================
+   CLICK EVENTS (HEATMAP)
+========================= */
+
+export type ClickEvent = {
+  id: number;
+  path: string;
+  x_pct: number;
+  y_pct: number;
+  viewport_width: number;
+  viewport_height: number;
+  created_at: string;
+};
+
+export type ClickEventInput = {
+  path: string;
+  x_pct: number;
+  y_pct: number;
+  viewport_width: number;
+  viewport_height: number;
+};
+
+export async function recordClickEvent(input: ClickEventInput): Promise<void> {
+  await sql`
+    INSERT INTO click_events (path, x_pct, y_pct, viewport_width, viewport_height)
+    VALUES (${input.path}, ${input.x_pct}, ${input.y_pct}, ${input.viewport_width}, ${input.viewport_height})
+  `;
+}
+
+export async function getClickEvents(
+  path: string,
+  device: "desktop" | "mobile",
+  limit = 3000
+): Promise<ClickEvent[]> {
+  const rows =
+    device === "mobile"
+      ? await sql`
+          SELECT * FROM click_events
+          WHERE path = ${path} AND viewport_width < 640
+          ORDER BY created_at DESC
+          LIMIT ${limit}
+        `
+      : await sql`
+          SELECT * FROM click_events
+          WHERE path = ${path} AND viewport_width >= 640
+          ORDER BY created_at DESC
+          LIMIT ${limit}
+        `;
+  return rows as ClickEvent[];
+}
+
+export async function getTrackedPaths(): Promise<{ path: string; count: number }[]> {
+  const rows = await sql`
+    SELECT path, COUNT(*) as count
+    FROM click_events
+    GROUP BY path
+    ORDER BY count DESC
+  `;
+  return rows.map((r) => ({ path: r.path as string, count: Number(r.count) }));
+}

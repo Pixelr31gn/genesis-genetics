@@ -10,6 +10,7 @@ import {
   createProduct,
   deletePost,
   deleteProduct,
+  getClickEvents,
   getOrderById,
   markOrderShipped,
   setProductOrder,
@@ -160,6 +161,14 @@ export async function deletePostAction(formData: FormData) {
   await deletePost(id);
   revalidatePath("/research");
   revalidatePath("/admin/posts");
+}
+
+export async function getHeatmapDataAction(
+  path: string,
+  device: "desktop" | "mobile"
+) {
+  await requireSession();
+  return getClickEvents(path, device);
 }
 
 export async function logout() {
