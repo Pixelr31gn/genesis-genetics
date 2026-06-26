@@ -101,6 +101,17 @@ export default function CheckoutPage() {
     );
   }
 
+  const infoComplete = Boolean(name.trim() && email.trim());
+  const shippingComplete =
+    infoComplete &&
+    Boolean(
+      shippingAddress1.trim() &&
+        shippingCity.trim() &&
+        shippingState.trim() &&
+        shippingZip.trim()
+    );
+  const currentStep = !infoComplete ? 1 : !shippingComplete ? 2 : 3;
+
   const itemsForOrder = cart.items.map((i) => ({
     productId: i.productId,
     name: i.name,
@@ -247,9 +258,15 @@ export default function CheckoutPage() {
         <p className="text-[11px] uppercase tracking-[0.3em] text-[#00FF41]/60 mb-2">
           Checkout
         </p>
-        <h1 className="text-3xl md:text-4xl font-light mb-10">
+        <h1 className="text-3xl md:text-4xl font-light mb-8">
           Complete Your Order
         </h1>
+
+        <CheckoutSteps
+          currentStep={currentStep}
+          infoComplete={infoComplete}
+          shippingComplete={shippingComplete}
+        />
 
         <form
           onSubmit={(e) => e.preventDefault()}
@@ -500,6 +517,62 @@ export default function CheckoutPage() {
 
       <Footer />
     </main>
+  );
+}
+
+function CheckoutSteps({
+  currentStep,
+  infoComplete,
+  shippingComplete,
+}: {
+  currentStep: 1 | 2 | 3;
+  infoComplete: boolean;
+  shippingComplete: boolean;
+}) {
+  const steps: { step: 1 | 2 | 3; label: string; done: boolean }[] = [
+    { step: 1, label: "Info", done: infoComplete },
+    { step: 2, label: "Shipping", done: shippingComplete },
+    { step: 3, label: "Payment", done: false },
+  ];
+
+  return (
+    <div className="flex items-center mb-10" aria-hidden="true">
+      {steps.map(({ step, label, done }, i) => {
+        const active = step === currentStep;
+        const reached = step <= currentStep;
+        return (
+          <div key={step} className="flex items-center flex-1 last:flex-none">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`flex items-center justify-center w-7 h-7 rounded-full border text-xs shrink-0 transition-colors ${
+                  done
+                    ? "border-[#00FF41] bg-[#00FF41] text-black"
+                    : active
+                    ? "border-[#00FF41] text-[#00FF41]"
+                    : "border-white/20 text-white/40"
+                }`}
+              >
+                {done ? "✓" : step}
+              </div>
+              <span
+                className={`text-xs uppercase tracking-[0.15em] whitespace-nowrap ${
+                  reached ? "text-white/80" : "text-white/30"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {i < steps.length - 1 ? (
+              <div
+                className={`h-px flex-1 mx-4 transition-colors ${
+                  step < currentStep ? "bg-[#00FF41]/50" : "bg-white/10"
+                }`}
+              />
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

@@ -4,7 +4,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import ProductCard from "../../components/ProductCard";
 import AddToCartControls from "./AddToCartControls";
-import Bpc157SeoContent from "./Bpc157SeoContent";
+import ProductSeoContent from "./ProductSeoContent";
 import { getPostsForProduct, getProductBySlug, getRelatedProducts } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 
@@ -164,7 +164,7 @@ export default async function CompoundPage({
         </section>
       ) : null}
 
-      {product.slug === "bpc-157" ? <Bpc157SeoContent /> : null}
+      <ProductSeoContent product={product} related={related} />
 
       <Footer />
     </main>
