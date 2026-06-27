@@ -34,6 +34,7 @@ async function requireSession() {
 
 function readProductInput(formData: FormData): ProductInput {
   const discount = Number(formData.get("discount_percent") || 0);
+  const expiresRaw = String(formData.get("discount_expires_at") || "").trim();
   return {
     name: String(formData.get("name") || ""),
     category: String(formData.get("category") || "Research Compound"),
@@ -42,7 +43,8 @@ function readProductInput(formData: FormData): ProductInput {
     price: Number(formData.get("price") || 0),
     description: String(formData.get("description") || ""),
     stock: Number(formData.get("stock") || 0),
-    discount_percent: Math.min(30, Math.max(0, Math.round(discount))),
+    discount_percent: Math.min(40, Math.max(0, Math.round(discount))),
+    discount_expires_at: expiresRaw ? new Date(`${expiresRaw}:00Z`).toISOString() : null,
   };
 }
 

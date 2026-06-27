@@ -12,7 +12,7 @@ import {
   getRelatedProducts,
   recordProductInterestEvent,
 } from "@/lib/db";
-import { getDiscountedPrice } from "@/lib/pricing";
+import { getDiscountedPrice, isDiscountActive } from "@/lib/pricing";
 import { isLikelyBot } from "@/lib/bot-detect";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +52,7 @@ export default async function CompoundPage({
     recordProductInterestEvent(product.id, "detail_view").catch(() => {});
   }
 
-  const hasDiscount = product.discount_percent > 0;
+  const hasDiscount = isDiscountActive(product);
   const discountedPrice = hasDiscount
     ? getDiscountedPrice(Number(product.price), product.discount_percent)
     : null;

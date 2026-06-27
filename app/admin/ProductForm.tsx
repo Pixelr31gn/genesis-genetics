@@ -84,15 +84,30 @@ export default function ProductForm({
             type="number"
             step="1"
             min={0}
-            max={30}
+            max={40}
             defaultValue={product?.discount_percent ?? 0}
             className="field"
           />
           <p className="text-xs text-white/30 mt-2">
-            0 = no discount. Max 30%. Shows as a sale badge on the storefront.
+            0 = no discount. Max 40%. Shows as a sale badge on the storefront.
           </p>
         </Field>
       </div>
+
+      <Field label="Discount Ends (optional, UTC)">
+        <input
+          name="discount_expires_at"
+          type="datetime-local"
+          defaultValue={toUtcInputValue(product?.discount_expires_at)}
+          className="field"
+        />
+        <p className="text-xs text-white/30 mt-2">
+          Leave blank for an open-ended discount. Once this time passes (UTC),
+          the product automatically reverts to full price everywhere on the
+          site. US Eastern is UTC-4 right now, e.g. 11:59pm ET = 3:59am UTC
+          the next day.
+        </p>
+      </Field>
 
       <Field label="Image">
         <ImageField
@@ -143,6 +158,13 @@ export default function ProductForm({
       </button>
     </form>
   );
+}
+
+function toUtcInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  // datetime-local wants "YYYY-MM-DDTHH:mm" — slice the ISO string directly
+  // so the displayed value is UTC, not the browser's local time.
+  return iso.slice(0, 16);
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

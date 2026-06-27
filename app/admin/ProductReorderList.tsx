@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Reorder } from "framer-motion";
 import Link from "next/link";
 import type { Product } from "@/lib/db";
-import { getDiscountedPrice } from "@/lib/pricing";
+import { getDiscountedPrice, isDiscountActive } from "@/lib/pricing";
 import { deleteProductAction, reorderProductsAction } from "./actions";
 
 export default function ProductReorderList({
@@ -66,10 +66,10 @@ export default function ProductReorderList({
           as="div"
         >
           {items.map((p) => {
-            const discounted =
-              p.discount_percent > 0
-                ? getDiscountedPrice(Number(p.price), p.discount_percent)
-                : null;
+            const discountActive = isDiscountActive(p);
+            const discounted = discountActive
+              ? getDiscountedPrice(Number(p.price), p.discount_percent)
+              : null;
             return (
               <Reorder.Item
                 key={p.id}
@@ -93,9 +93,19 @@ export default function ProductReorderList({
                 </div>
                 <div className="flex-1 px-5 text-sm">
                   {p.name}
-                  {p.discount_percent > 0 ? (
+                  {discountActive ? (
                     <span className="ml-2 text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#00FF41] text-black font-medium">
                       -{p.discount_percent}%
+                    </span>
+                  ) : null}
+                  {discountActive && p.discount_expires_at ? (
+                    <span className="ml-2 text-[10px] text-white/30">
+                      ends {new Date(p.discount_expires_at).toLocaleDateString()}
+                    </span>
+                  ) : null}
+                  {!discountActive && p.discount_percent > 0 ? (
+                    <span className="ml-2 text-[10px] text-white/20">
+                      (discount expired)
                     </span>
                   ) : null}
                 </div>

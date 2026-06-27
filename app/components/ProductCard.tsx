@@ -11,7 +11,7 @@ import {
   useTransform,
 } from "framer-motion";
 import type { Product } from "@/lib/db";
-import { getDiscountedPrice } from "@/lib/pricing";
+import { getDiscountedPrice, isDiscountActive } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
 import { useCardViewTracking, useHoverTracking } from "@/lib/product-interest-client";
 
@@ -67,7 +67,7 @@ export default function ProductCard({
     onHoverEnd();
   }
 
-  const hasDiscount = product.discount_percent > 0;
+  const hasDiscount = isDiscountActive(product);
   const discountedPrice = hasDiscount
     ? getDiscountedPrice(Number(product.price), product.discount_percent)
     : null;

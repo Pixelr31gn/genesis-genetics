@@ -22,6 +22,7 @@ export type Product = {
   stock: number;
   sort_order: number;
   discount_percent: number;
+  discount_expires_at: string | null;
   created_at: string;
 };
 
@@ -34,6 +35,7 @@ export type ProductInput = {
   description: string;
   stock: number;
   discount_percent: number;
+  discount_expires_at: string | null;
 };
 
 function slugify(name: string): string {
@@ -61,7 +63,7 @@ async function generateUniqueSlug(name: string, excludeId?: number): Promise<str
 
 export async function getProducts(): Promise<Product[]> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     ORDER BY sort_order ASC, created_at DESC
   `;
@@ -70,7 +72,7 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProductById(id: number): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     WHERE id = ${id}
   `;
@@ -79,7 +81,7 @@ export async function getProductById(id: number): Promise<Product | null> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     WHERE slug = ${slug}
   `;
@@ -104,10 +106,10 @@ export async function createProduct(
   `;
   const rows = await sql`
     INSERT INTO products
-      (name, slug, category, dosage, purity, price, description, stock, discount_percent, sort_order, image_url)
+      (name, slug, category, dosage, purity, price, description, stock, discount_percent, discount_expires_at, sort_order, image_url)
     VALUES
-      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${data.discount_percent}, ${next_order}, ${imageUrl})
-    RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${data.discount_percent}, ${data.discount_expires_at}, ${next_order}, ${imageUrl})
+    RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
   `;
   return rows[0] as Product;
 }
@@ -130,9 +132,10 @@ export async function updateProduct(
             description = ${data.description},
             stock = ${data.stock},
             discount_percent = ${data.discount_percent},
+            discount_expires_at = ${data.discount_expires_at},
             image_url = ${imageUrl}
         WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
       `
     : await sql`
         UPDATE products
@@ -144,9 +147,10 @@ export async function updateProduct(
             price = ${data.price},
             description = ${data.description},
             stock = ${data.stock},
-            discount_percent = ${data.discount_percent}
+            discount_percent = ${data.discount_percent},
+            discount_expires_at = ${data.discount_expires_at}
         WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, created_at
+        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
       `;
   return rows[0] as Product;
 }
@@ -161,7 +165,7 @@ export async function deleteProduct(id: number): Promise<void> {
 
 export async function getRelatedProducts(productId: number): Promise<Product[]> {
   const rows = await sql`
-    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.created_at
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
     FROM related_products rp
     JOIN products p ON p.id = rp.related_id
     WHERE rp.product_id = ${productId}
@@ -288,7 +292,7 @@ export async function deletePost(id: number): Promise<void> {
 
 export async function getProductsForPost(postId: number): Promise<Product[]> {
   const rows = await sql`
-    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.created_at
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
     FROM post_products pp
     JOIN products p ON p.id = pp.product_id
     WHERE pp.post_id = ${postId}
@@ -639,7 +643,7 @@ export async function getProductInterestRanking(days = 30): Promise<ProductInter
     )
     SELECT
       p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url,
-      p.description, p.stock, p.sort_order, p.discount_percent, p.created_at,
+      p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at,
       COALESCE(e.views, 0) AS views,
       COALESCE(e.hovers, 0) AS hovers,
       COALESCE(e.detail_views, 0) AS detail_views,
