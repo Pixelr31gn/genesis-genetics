@@ -17,7 +17,8 @@
     "db:migrate-currency": "node --env-file=.env.local scripts/add-currency.mjs",
     "db:migrate-click-events": "node --env-file=.env.local scripts/add-click-events.mjs",
     "db:migrate-product-interest": "node --env-file=.env.local scripts/add-product-interest.mjs",
-    "db:migrate-discount-expiry": "node --env-file=.env.local scripts/add-discount-expiry.mjs"
+    "db:migrate-discount-expiry": "node --env-file=.env.local scripts/add-discount-expiry.mjs",
+    "db:migrate-funnel-events": "node --env-file=.env.local scripts/add-funnel-events.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

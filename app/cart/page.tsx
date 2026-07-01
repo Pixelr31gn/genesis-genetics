@@ -4,11 +4,13 @@ import Link from "next/link";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "@/lib/cart-context";
+import { useFunnelEvent } from "@/lib/funnel-client";
 
 const QUANTITIES = Array.from({ length: 10 }, (_, i) => i + 1);
 
 export default function CartPage() {
   const cart = useCart();
+  useFunnelEvent("cart_viewed", cart.itemCount, cart.total, cart.hydrated);
 
   return (
     <main className="bg-black text-white min-h-screen selection:bg-[#00FF41]/30">

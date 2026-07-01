@@ -64,7 +64,7 @@ export default function CategoryCarousel({
       {products.map((product, i) => (
         <div
           key={product.id}
-          className={`snap-start shrink-0 w-[78%] sm:w-auto sm:shrink ${
+          className={`snap-start shrink-0 w-[72%] sm:w-auto sm:shrink ${
             visibleIds.has(product.id) ? "" : "hidden"
           }`}
         >

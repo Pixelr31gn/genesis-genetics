@@ -6,14 +6,11 @@ import Script from "next/script";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "@/lib/cart-context";
+import { useFunnelEvent } from "@/lib/funnel-client";
 import { getShippingTiers, getFreeShippingThreshold } from "@/lib/shipping";
-import { COUNTRIES, getCurrencyForCountry, isDomestic } from "@/lib/countries";
+import { COUNTRIES, isDomestic } from "@/lib/countries";
 import { formatCurrency } from "@/lib/currency";
-import {
-  createZelleOrderAction,
-  confirmPaypalOrderAction,
-  getCheckoutQuoteAction,
-} from "./actions";
+import { confirmPaypalOrderAction, getCheckoutQuoteAction } from "./actions";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 const ZERO_DECIMAL_CURRENCIES = new Set(["JPY", "HUF"]);
@@ -59,7 +56,6 @@ export default function CheckoutPage() {
   const [shippingZip, setShippingZip] = useState("");
   const [shippingCountry, setShippingCountry] = useState("US");
   const [shippingTier, setShippingTier] = useState<string>("standard");
-  const [method, setMethod] = useState<"zelle" | "paypal">("zelle");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
@@ -86,7 +82,6 @@ export default function CheckoutPage() {
   quoteRef.current = quote;
 
   const domestic = isDomestic(shippingCountry);
-  const currency = getCurrencyForCountry(shippingCountry);
   const tiers = getShippingTiers(shippingCountry);
   const freeShippingThreshold = getFreeShippingThreshold(shippingCountry);
 
@@ -119,9 +114,7 @@ export default function CheckoutPage() {
     quantity: i.quantity,
   }));
 
-  useEffect(() => {
-    if (!domestic && method === "zelle") setMethod("paypal");
-  }, [domestic, method]);
+  useFunnelEvent("checkout_viewed", cart.itemCount, cart.total, cart.hydrated);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,31 +135,8 @@ export default function CheckoutPage() {
     setPaypalReady(false);
   }, [quote?.currency]);
 
-  async function handleZelleSubmit() {
-    if (!hasRequiredShippingInfo(customer)) {
-      setError("Please fill in your name, email, and shipping address.");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await createZelleOrderAction(
-        customer,
-        itemsForOrder,
-        shippingTier
-      );
-      cart.clear();
-      router.push(
-        `/checkout/success?code=${result.orderCode}&method=zelle&total=${result.total.toFixed(2)}`
-      );
-    } catch {
-      setError("Something went wrong placing your order. Please try again.");
-      setSubmitting(false);
-    }
-  }
-
   useEffect(() => {
-    if (!paypalReady || method !== "paypal" || !paypalRef.current || !window.paypal) {
+    if (!paypalReady || !paypalRef.current || !window.paypal) {
       return;
     }
 
@@ -221,14 +191,14 @@ export default function CheckoutPage() {
         }
       },
       onError: () => {
-        setError("PayPal checkout failed. Please try again or use Zelle.");
+        setError("PayPal checkout failed. Please try again.");
       },
     });
 
     buttons.render(paypalRef.current);
     return () => buttons.close?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paypalReady, method]);
+  }, [paypalReady]);
 
   if (cart.items.length === 0) {
     return (
@@ -453,65 +423,16 @@ export default function CheckoutPage() {
 
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-3">
-              Payment Method
+              Payment
             </p>
-            <div className={`grid gap-3 ${domestic ? "grid-cols-2" : "grid-cols-1"}`}>
-              {domestic ? (
-                <button
-                  type="button"
-                  onClick={() => setMethod("zelle")}
-                  className={`py-3 rounded-xl border text-sm transition ${
-                    method === "zelle"
-                      ? "border-[#00FF41]/50 text-[#00FF41] bg-[#00FF41]/5"
-                      : "border-white/15 text-white/60 hover:border-white/30"
-                  }`}
-                >
-                  Zelle
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => setMethod("paypal")}
-                className={`py-3 rounded-xl border text-sm transition ${
-                  method === "paypal"
-                    ? "border-[#00FF41]/50 text-[#00FF41] bg-[#00FF41]/5"
-                    : "border-white/15 text-white/60 hover:border-white/30"
-                }`}
-              >
-                PayPal
-              </button>
-            </div>
-            {!domestic ? (
-              <p className="text-xs text-white/30 mt-2">
-                Zelle requires a US bank account, so international orders pay via PayPal.
-              </p>
-            ) : null}
-          </div>
-
-          {error ? <p className="text-sm text-red-400/80">{error}</p> : null}
-
-          {method === "zelle" && quote ? (
-            <div className="space-y-4">
-              <p className="text-sm text-white/50 leading-relaxed">
-                Send <span className="text-white">${quote.total.toFixed(2)}</span> via
-                Zelle to <span className="text-[#00FF41]">8017160941</span>. A
-                unique order code will be generated for you to include in the
-                Zelle memo once you place the order below.
-              </p>
-              <button
-                type="button"
-                onClick={handleZelleSubmit}
-                disabled={submitting}
-                className="w-full py-3.5 rounded-full bg-[#00FF41] text-black text-sm font-medium hover:bg-[#00FF41]/90 transition disabled:opacity-50"
-              >
-                {submitting ? "Placing Order..." : "I'll Pay via Zelle — Place Order"}
-              </button>
-            </div>
-          ) : method === "paypal" ? (
+            {error ? <p className="text-sm text-red-400/80 mb-3">{error}</p> : null}
             <div className="rounded-2xl border border-[#00FF41]/25 bg-[#00FF41]/[0.04] p-3 shadow-[0_0_24px_rgba(0,255,65,0.08)]">
               <div ref={paypalRef} className="min-h-[50px]" />
             </div>
-          ) : null}
+            {submitting ? (
+              <p className="text-xs text-white/30 mt-2">Confirming your payment…</p>
+            ) : null}
+          </div>
         </form>
       </section>
 

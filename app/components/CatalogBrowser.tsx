@@ -35,7 +35,7 @@ export default function CatalogBrowser({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-10">
+      <div className="sticky top-16 sm:top-[72px] z-30 -mx-6 px-6 py-3 sm:static sm:mx-0 sm:px-0 sm:py-0 bg-black/90 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-b border-white/10 sm:border-0 flex flex-col sm:flex-row sm:items-center gap-4 mb-10">
         <input
           type="text"
           value={query}
@@ -90,9 +90,16 @@ export default function CatalogBrowser({
             <h3 className="text-xl md:text-2xl font-light text-[#00FF41]">
               {category}
             </h3>
-            <p className="mt-2 mb-8 text-sm text-white/40 max-w-2xl leading-relaxed">
+            <p className="hidden sm:block mt-2 mb-8 text-sm text-white/40 max-w-2xl leading-relaxed">
               {getCategoryIntro(category)}
             </p>
+            {visibleProducts.length > 1 ? (
+              <p className="sm:hidden mt-1.5 mb-4 text-xs text-white/30">
+                {visibleProducts.length} compounds — swipe to browse →
+              </p>
+            ) : (
+              <div className="sm:hidden h-4" />
+            )}
             <CategoryCarousel
               products={categoryProducts}
               visibleIds={new Set(visibleProducts.map((p) => p.id))}

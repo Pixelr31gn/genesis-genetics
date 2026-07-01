@@ -686,3 +686,55 @@ export async function getTrendingProducts(limit = 6, days = 30): Promise<Product
     .filter((r) => r.stock > 0 && r.views + r.hovers + r.detail_views + r.add_to_carts + r.purchases > 0)
     .slice(0, limit);
 }
+
+/* =========================
+   CHECKOUT FUNNEL EVENTS
+========================= */
+
+export type FunnelEventType = "cart_viewed" | "checkout_viewed";
+
+export async function recordFunnelEvent(
+  eventType: FunnelEventType,
+  itemCount: number,
+  cartTotal: number
+): Promise<void> {
+  await sql`
+    INSERT INTO funnel_events (event_type, item_count, cart_total)
+    VALUES (${eventType}, ${itemCount}, ${cartTotal})
+  `;
+}
+
+export type FunnelSummary = {
+  addToCart: number;
+  cartViewed: number;
+  checkoutViewed: number;
+  ordersPlaced: number;
+};
+
+export async function getFunnelSummary(days = 30): Promise<FunnelSummary> {
+  const [addToCartRows, funnelRows, orderRows] = await Promise.all([
+    sql`
+      SELECT COUNT(*) c FROM product_interest_events
+      WHERE event_type = 'add_to_cart' AND created_at > now() - (${days}::text || ' days')::interval
+    `,
+    sql`
+      SELECT event_type, COUNT(*) c FROM funnel_events
+      WHERE created_at > now() - (${days}::text || ' days')::interval
+      GROUP BY event_type
+    `,
+    sql`
+      SELECT COUNT(*) c FROM orders
+      WHERE created_at > now() - (${days}::text || ' days')::interval
+    `,
+  ]);
+
+  const byType: Record<string, number> = {};
+  for (const r of funnelRows) byType[r.event_type as string] = Number(r.c);
+
+  return {
+    addToCart: Number(addToCartRows[0]?.c ?? 0),
+    cartViewed: byType["cart_viewed"] ?? 0,
+    checkoutViewed: byType["checkout_viewed"] ?? 0,
+    ordersPlaced: Number(orderRows[0]?.c ?? 0),
+  };
+}

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
-import { getProductInterestRanking } from "@/lib/db";
+import { getProductInterestRanking, getFunnelSummary } from "@/lib/db";
 
 export default async function AdminInterestPage() {
   const cookieStore = await cookies();
@@ -11,7 +11,10 @@ export default async function AdminInterestPage() {
     redirect("/admin/login");
   }
 
-  const ranking = await getProductInterestRanking(30);
+  const [ranking, funnel] = await Promise.all([
+    getProductInterestRanking(30),
+    getFunnelSummary(30),
+  ]);
   const hasAnyData = ranking.some(
     (r) => r.views + r.hovers + r.detail_views + r.add_to_carts + r.purchases > 0
   );
@@ -33,6 +36,20 @@ export default async function AdminInterestPage() {
             ← Back to Catalog
           </Link>
         </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: "Add to Cart", value: funnel.addToCart },
+            { label: "Cart Viewed", value: funnel.cartViewed },
+            { label: "Checkout Viewed", value: funnel.checkoutViewed },
+            { label: "Orders Placed", value: funnel.ordersPlaced },
+          ].map(({ label, value }) => (
+            <div key={label} className="border border-white/10 rounded-2xl bg-white/[0.03] p-5">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">{label}</p>
+              <p className="text-3xl font-light text-white">{value}</p>
+            </div>
+          ))}
+        </div>
+
         <p className="text-sm text-white/40 mb-10 max-w-2xl">
           Last 30 days. Score is relative to whichever product has the most
           weighted activity right now — views, hovers, detail-page visits,
