@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Product } from "@/lib/db";
 import { categorySlug, getCategoryIntro, sortCategories } from "@/lib/category-content";
 import CategoryCarousel from "./CategoryCarousel";
+import ProductCard from "./ProductCard";
 
 export default function CatalogBrowser({
   products,
@@ -74,39 +75,53 @@ export default function CatalogBrowser({
         </div>
       </div>
 
-      {categories.map((category) => {
-        const categoryProducts = products.filter((p) => p.category === category);
-        const visibleProducts = categoryProducts.filter(matchesQuery);
-        const categoryHidden =
-          (activeCategory !== "all" && activeCategory !== category) ||
-          visibleProducts.length === 0;
+      {activeCategory === "all" ? (
+        // Flat dense grid — all products together, no category sections
+        (() => {
+          const visible = products.filter(matchesQuery);
+          if (visible.length === 0) return null;
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {visible.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+          );
+        })()
+      ) : (
+        categories.map((category) => {
+          const categoryProducts = products.filter((p) => p.category === category);
+          const visibleProducts = categoryProducts.filter(matchesQuery);
+          const categoryHidden =
+            activeCategory !== category || visibleProducts.length === 0;
 
-        return (
-          <section
-            key={category}
-            id={categorySlug(category)}
-            className={categoryHidden ? "hidden" : "mb-16"}
-          >
-            <h3 className="text-xl md:text-2xl font-light text-[#00FF41]">
-              {category}
-            </h3>
-            <p className="hidden sm:block mt-2 mb-8 text-sm text-white/40 max-w-2xl leading-relaxed">
-              {getCategoryIntro(category)}
-            </p>
-            {visibleProducts.length > 1 ? (
-              <p className="sm:hidden mt-1.5 mb-4 text-xs text-white/30">
-                {visibleProducts.length} compounds — swipe to browse →
+          return (
+            <section
+              key={category}
+              id={categorySlug(category)}
+              className={categoryHidden ? "hidden" : "mb-16"}
+            >
+              <h3 className="text-xl md:text-2xl font-light text-[#00FF41]">
+                {category}
+              </h3>
+              <p className="hidden sm:block mt-2 mb-8 text-sm text-white/40 max-w-2xl leading-relaxed">
+                {getCategoryIntro(category)}
               </p>
-            ) : (
-              <div className="sm:hidden h-4" />
-            )}
-            <CategoryCarousel
-              products={categoryProducts}
-              visibleIds={new Set(visibleProducts.map((p) => p.id))}
-            />
-          </section>
-        );
-      })}
+              {visibleProducts.length > 1 ? (
+                <p className="sm:hidden mt-1.5 mb-4 text-xs text-white/30">
+                  {visibleProducts.length} compounds — swipe to browse →
+                </p>
+              ) : (
+                <div className="sm:hidden h-4" />
+              )}
+              <CategoryCarousel
+                products={categoryProducts}
+                visibleIds={new Set(visibleProducts.map((p) => p.id))}
+              />
+            </section>
+          );
+        })
+      )}
 
       {normalizedQuery &&
       categories.every((category) => {

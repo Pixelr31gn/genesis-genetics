@@ -35,6 +35,8 @@ declare global {
 type Quote = {
   subtotal: number;
   shippingCost: number;
+  taxRate: number;
+  taxAmount: number;
   total: number;
   currency: string;
   rate: number;
@@ -118,7 +120,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let cancelled = false;
-    getCheckoutQuoteAction(itemsForOrder, shippingTier, shippingCountry)
+    getCheckoutQuoteAction(itemsForOrder, shippingTier, shippingCountry, shippingState)
       .then((q) => {
         if (!cancelled) setQuote(q);
       })
@@ -129,7 +131,7 @@ export default function CheckoutPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shippingTier, shippingCountry, cart.total]);
+  }, [shippingTier, shippingCountry, shippingState, cart.total]);
 
   useEffect(() => {
     setPaypalReady(false);
@@ -407,6 +409,23 @@ export default function CheckoutPage() {
             <div className="flex items-center justify-between text-sm text-white/50">
               <span>Shipping</span>
               <span>${(quote?.shippingCost ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-white/50">
+              <span>
+                Tax
+                {quote && quote.taxRate > 0
+                  ? ` (${(quote.taxRate * 100).toFixed(2)}%)`
+                  : ""}
+              </span>
+              <span>
+                {quote
+                  ? quote.taxAmount > 0
+                    ? `$${quote.taxAmount.toFixed(2)}`
+                    : shippingState.trim()
+                    ? "$0.00"
+                    : "—"
+                  : "—"}
+              </span>
             </div>
             <div className="flex items-center justify-between pt-1">
               <span className="text-white/50">Total</span>

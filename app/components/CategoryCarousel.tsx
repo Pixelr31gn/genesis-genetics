@@ -59,12 +59,12 @@ export default function CategoryCarousel({
       onTouchEnd={scheduleResume}
       onMouseEnter={pause}
       onMouseLeave={scheduleResume}
-      className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible lg:grid-cols-3"
+      className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible lg:grid-cols-4"
     >
       {products.map((product, i) => (
         <div
           key={product.id}
-          className={`snap-start shrink-0 w-[72%] sm:w-auto sm:shrink ${
+          className={`snap-start shrink-0 w-[62%] sm:w-auto sm:shrink ${
             visibleIds.has(product.id) ? "" : "hidden"
           }`}
         >

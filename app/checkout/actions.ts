@@ -5,6 +5,7 @@ import { verifyPaypalOrder } from "@/lib/paypal";
 import { getShippingCost } from "@/lib/shipping";
 import { getCurrencyForCountry, isDomestic } from "@/lib/countries";
 import { getExchangeRate, convertFromUSD } from "@/lib/currency";
+import { getTaxRate, computeTax } from "@/lib/tax";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export type CheckoutItem = {
@@ -43,15 +44,18 @@ function computeSubtotal(items: CheckoutItem[]): number {
 export async function getCheckoutQuoteAction(
   items: CheckoutItem[],
   shippingTier: string,
-  countryCode: string
+  countryCode: string,
+  stateCode: string = ""
 ) {
   const subtotal = computeSubtotal(items);
   const shippingCost = getShippingCost(countryCode, shippingTier, subtotal);
-  const total = subtotal + shippingCost;
+  const taxRate = getTaxRate(countryCode, stateCode);
+  const taxAmount = computeTax(subtotal, shippingCost, taxRate);
+  const total = subtotal + shippingCost + taxAmount;
   const currency = getCurrencyForCountry(countryCode);
   const rate = await getExchangeRate(currency);
   const totalCharged = convertFromUSD(total, rate, currency);
-  return { subtotal, shippingCost, total, currency, rate, totalCharged };
+  return { subtotal, shippingCost, taxRate, taxAmount, total, currency, rate, totalCharged };
 }
 
 export async function createZelleOrderAction(
@@ -65,7 +69,9 @@ export async function createZelleOrderAction(
 
   const subtotal = computeSubtotal(items);
   const shippingCost = getShippingCost(customer.shippingCountry, shippingTier, subtotal);
-  const total = subtotal + shippingCost;
+  const taxRate = getTaxRate(customer.shippingCountry, customer.shippingState);
+  const taxAmount = computeTax(subtotal, shippingCost, taxRate);
+  const total = subtotal + shippingCost + taxAmount;
 
   const order = await createOrder({
     customer_name: customer.name,
@@ -75,6 +81,8 @@ export async function createZelleOrderAction(
     subtotal,
     shipping_tier: shippingTier,
     shipping_cost: shippingCost,
+    tax_rate: taxRate,
+    tax_amount: taxAmount,
     total,
     currency: "USD",
     fx_rate: 1,
@@ -103,7 +111,9 @@ export async function confirmPaypalOrderAction(
 ) {
   const subtotal = computeSubtotal(items);
   const shippingCost = getShippingCost(customer.shippingCountry, shippingTier, subtotal);
-  const total = subtotal + shippingCost;
+  const taxRate = getTaxRate(customer.shippingCountry, customer.shippingState);
+  const taxAmount = computeTax(subtotal, shippingCost, taxRate);
+  const total = subtotal + shippingCost + taxAmount;
   const currency = getCurrencyForCountry(customer.shippingCountry);
   const rate = await getExchangeRate(currency);
   const totalCharged = convertFromUSD(total, rate, currency);
@@ -121,6 +131,8 @@ export async function confirmPaypalOrderAction(
     subtotal,
     shipping_tier: shippingTier,
     shipping_cost: shippingCost,
+    tax_rate: taxRate,
+    tax_amount: taxAmount,
     total,
     currency,
     fx_rate: rate,

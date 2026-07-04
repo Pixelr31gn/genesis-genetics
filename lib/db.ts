@@ -371,6 +371,8 @@ export type Order = {
   subtotal: number;
   shipping_tier: string;
   shipping_cost: number;
+  tax_rate: number;
+  tax_amount: number;
   total: number;
   currency: string;
   fx_rate: number;
@@ -404,6 +406,8 @@ export type CreateOrderInput = {
   subtotal: number;
   shipping_tier: string;
   shipping_cost: number;
+  tax_rate: number;
+  tax_amount: number;
   total: number;
   currency: string;
   fx_rate: number;
@@ -442,12 +446,12 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
       const rows = await sql`
         INSERT INTO orders (
           order_code, customer_name, customer_email, customer_note, payment_method,
-          subtotal, shipping_tier, shipping_cost, total, currency, fx_rate, total_charged,
+          subtotal, shipping_tier, shipping_cost, tax_rate, tax_amount, total, currency, fx_rate, total_charged,
           phone, shipping_address1, shipping_address2, shipping_city, shipping_state, shipping_zip, shipping_country
         )
         VALUES (
           ${orderCode}, ${input.customer_name}, ${input.customer_email}, ${input.customer_note}, ${input.payment_method},
-          ${input.subtotal}, ${input.shipping_tier}, ${input.shipping_cost}, ${input.total}, ${input.currency}, ${input.fx_rate}, ${input.total_charged},
+          ${input.subtotal}, ${input.shipping_tier}, ${input.shipping_cost}, ${input.tax_rate}, ${input.tax_amount}, ${input.total}, ${input.currency}, ${input.fx_rate}, ${input.total_charged},
           ${input.phone}, ${input.shipping_address1}, ${input.shipping_address2}, ${input.shipping_city}, ${input.shipping_state}, ${input.shipping_zip}, ${input.shipping_country}
         )
         RETURNING *

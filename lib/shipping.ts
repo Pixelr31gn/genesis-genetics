@@ -6,14 +6,15 @@ export const DOMESTIC_TIERS = [
   { value: "express", label: "Express", eta: "1–2 business days", price: 32.99 },
 ] as const;
 
+// Rates based on FedEx published international rates for small packages (<1 lb) from US
 export const INTERNATIONAL_TIERS = [
-  { value: "standard", label: "International Standard", eta: "2–4 weeks", price: 19.99 },
-  { value: "priority", label: "International Priority", eta: "6–10 business days", price: 44.99 },
-  { value: "express", label: "International Express", eta: "3–5 business days", price: 74.99 },
+  { value: "standard", label: "FedEx International Economy", eta: "7–14 business days", price: 49.99 },
+  { value: "priority", label: "FedEx International Priority", eta: "4–7 business days", price: 89.99 },
+  { value: "express", label: "FedEx International First", eta: "2–4 business days", price: 129.99 },
 ] as const;
 
 export const DOMESTIC_FREE_SHIPPING_THRESHOLD = 200;
-export const INTERNATIONAL_FREE_SHIPPING_THRESHOLD = 500;
+export const INTERNATIONAL_FREE_SHIPPING_THRESHOLD = 750;
 
 export function getFreeShippingThreshold(countryCode: string): number {
   return isDomestic(countryCode)

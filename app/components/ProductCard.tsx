@@ -152,7 +152,7 @@ export default function ProductCard({
           />
 
           {/* IMAGE */}
-          <div className="relative aspect-[4/5] overflow-hidden">
+          <div className="relative aspect-[1/1] overflow-hidden">
             {product.image_url ? (
               <img
                 src={product.image_url}
@@ -201,7 +201,7 @@ export default function ProductCard({
           </div>
 
           {/* CONTENT */}
-          <div className="relative p-6">
+          <div className="relative p-4">
             <div className="flex items-end justify-between gap-4">
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 flex-1">
                 <Spec label="Purity" value={product.purity || "—"} />
