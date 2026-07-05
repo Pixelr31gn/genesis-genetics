@@ -81,7 +81,7 @@ export default function CatalogBrowser({
           const visible = products.filter(matchesQuery);
           if (visible.length === 0) return null;
           return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
               {visible.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />
               ))}

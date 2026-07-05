@@ -242,7 +242,7 @@ export default function CheckoutPage() {
 
         <form
           onSubmit={(e) => e.preventDefault()}
-          className="border border-white/10 rounded-2xl bg-white/[0.03] p-6 space-y-5"
+          className="border border-white/10 rounded-2xl bg-white/[0.03] p-4 sm:p-6 space-y-5"
         >
           <Field label="Full Name">
             <input
@@ -301,7 +301,7 @@ export default function CheckoutPage() {
               className="field"
             />
           </Field>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="City">
               <input
                 name="address-level2"
