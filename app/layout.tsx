@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/lib/cart-context";
-import LegalGate from "./components/LegalGate";
+// import LegalGate from "./components/LegalGate"; // disabled — re-enable to restore age/RUO gate
 import ClickTracker from "./components/ClickTracker";
 import "./globals.css";
 
@@ -36,7 +36,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LegalGate />
+        {/* <LegalGate /> */}
         <ClickTracker />
         <CartProvider>{children}</CartProvider>
         <Analytics />
