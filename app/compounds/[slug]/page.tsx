@@ -25,9 +25,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
+  const desc = product.description || `${product.name} research compound — ${product.purity || "high purity"}, for laboratory and research use only.`;
   return {
     title: `${product.name} — Genesis Genetics`,
-    description: product.description || undefined,
+    description: desc,
+    alternates: { canonical: `/compounds/${slug}` },
+    openGraph: {
+      type: "website",
+      title: `${product.name} — Genesis Genetics`,
+      description: desc,
+      url: `/compounds/${slug}`,
+      images: product.image_url ? [{ url: product.image_url, alt: product.name }] : [],
+    },
   };
 }
 
@@ -64,8 +73,32 @@ export default async function CompoundPage({
       ? "Low Stock"
       : "In Stock";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: product.image_url || undefined,
+    brand: { "@type": "Brand", name: "Genesis Genetics" },
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "USD",
+      price: String(discountedPrice ?? Number(product.price)),
+      availability:
+        product.stock === 0
+          ? "https://schema.org/OutOfStock"
+          : "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: "Genesis Genetics" },
+    },
+  };
+
   return (
     <main className="bg-black text-white min-h-screen selection:bg-[#00FF41]/30">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
 
       <section className="px-6 pt-28 pb-20 max-w-6xl mx-auto">

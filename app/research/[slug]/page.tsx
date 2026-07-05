@@ -19,9 +19,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return {};
+  const desc = post.meta_description || post.excerpt || undefined;
   return {
     title: `${post.title} — Genesis Genetics Research`,
-    description: post.meta_description || post.excerpt || undefined,
+    description: desc,
+    alternates: { canonical: `/research/${slug}` },
+    openGraph: {
+      type: "article",
+      title: `${post.title} — Genesis Genetics Research`,
+      description: desc,
+      url: `/research/${slug}`,
+    },
   };
 }
 

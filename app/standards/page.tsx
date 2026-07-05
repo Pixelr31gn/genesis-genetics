@@ -6,6 +6,12 @@ export const metadata = {
   title: "Standards — Genesis Genetics",
   description:
     "Analytical validation, purity testing, and handling standards behind every Genesis Genetics research compound.",
+  alternates: { canonical: "/standards" },
+  openGraph: {
+    title: "Standards — Genesis Genetics",
+    description: "Analytical validation, purity testing, and handling standards behind every Genesis Genetics research compound.",
+    url: "/standards",
+  },
 };
 
 const STANDARDS = [

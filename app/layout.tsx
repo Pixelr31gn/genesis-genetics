@@ -22,9 +22,21 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://genesisgenetics.io"),
   title: "Genesis Genetics — Precision Without Compromise",
   description:
     "Pharmaceutical-grade research compounds manufactured under strict analytical validation standards.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Genesis Genetics",
+    title: "Genesis Genetics — Precision Without Compromise",
+    description:
+      "Pharmaceutical-grade research compounds manufactured under strict analytical validation standards.",
+    url: "/",
+  },
   other: {
     "msvalidate.01": "FCB6AEDB25A5F2C35FD1B6A938DEA431",
   },

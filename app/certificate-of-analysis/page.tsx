@@ -10,6 +10,12 @@ export const metadata = {
   title: "Certificate of Analysis (COA) | Genesis Genetics",
   description:
     "What's included in a Genesis Genetics Certificate of Analysis, how lot-specific COAs are generated, and how to read purity and identity results for research compounds.",
+  alternates: { canonical: "/certificate-of-analysis" },
+  openGraph: {
+    title: "Certificate of Analysis (COA) | Genesis Genetics",
+    description: "What's included in a Genesis Genetics Certificate of Analysis, how lot-specific COAs are generated, and how to read purity and identity results for research compounds.",
+    url: "/certificate-of-analysis",
+  },
 };
 
 const FAQ_ITEMS = [

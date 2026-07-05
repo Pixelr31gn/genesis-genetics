@@ -10,6 +10,12 @@ export const metadata = {
   title: "Shipping & Cold Chain Logistics | Genesis Genetics",
   description:
     "How Genesis Genetics packages and ships temperature-sensitive research compounds, available shipping speeds, free shipping thresholds, and international delivery.",
+  alternates: { canonical: "/shipping-cold-chain" },
+  openGraph: {
+    title: "Shipping & Cold Chain Logistics | Genesis Genetics",
+    description: "How Genesis Genetics packages and ships temperature-sensitive research compounds, available shipping speeds, free shipping thresholds, and international delivery.",
+    url: "/shipping-cold-chain",
+  },
 };
 
 const FAQ_ITEMS = [

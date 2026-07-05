@@ -6,14 +6,15 @@ const BASE_URL = "https://genesisgenetics.io";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, posts] = await Promise.all([getProducts(), getPosts()]);
 
+  const now = new Date().toISOString();
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: BASE_URL, changeFrequency: "weekly", priority: 1 },
-    { url: `${BASE_URL}/standards`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/research`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${BASE_URL}/quality-control`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/certificate-of-analysis`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/shipping-cold-chain`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/categories/regeneration`, changeFrequency: "weekly", priority: 0.7 },
+    { url: BASE_URL, changeFrequency: "weekly", priority: 1, lastModified: now },
+    { url: `${BASE_URL}/standards`, changeFrequency: "monthly", priority: 0.5, lastModified: now },
+    { url: `${BASE_URL}/research`, changeFrequency: "weekly", priority: 0.8, lastModified: now },
+    { url: `${BASE_URL}/quality-control`, changeFrequency: "monthly", priority: 0.6, lastModified: now },
+    { url: `${BASE_URL}/certificate-of-analysis`, changeFrequency: "monthly", priority: 0.6, lastModified: now },
+    { url: `${BASE_URL}/shipping-cold-chain`, changeFrequency: "monthly", priority: 0.6, lastModified: now },
+    { url: `${BASE_URL}/categories/regeneration`, changeFrequency: "weekly", priority: 0.7, lastModified: now },
     { url: `${BASE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
 

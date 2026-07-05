@@ -6,6 +6,12 @@ export const metadata = {
   title: "Terms & Conditions | Genesis Genetics",
   description:
     "Genesis Genetics Terms & Conditions: Research Use Only (RUO) terms, definitions, age requirements, liability limitations, and sales policy for laboratory research compounds.",
+  alternates: { canonical: "/terms" },
+  openGraph: {
+    title: "Terms & Conditions | Genesis Genetics",
+    description: "Genesis Genetics Terms & Conditions: Research Use Only (RUO) terms, definitions, age requirements, liability limitations, and sales policy for laboratory research compounds.",
+    url: "/terms",
+  },
 };
 
 export default function TermsPage() {

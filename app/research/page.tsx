@@ -9,6 +9,12 @@ export const metadata = {
   title: "Research — Genesis Genetics",
   description:
     "Educational research overviews on peptides and research compounds — mechanisms, handling, and storage. Research use only.",
+  alternates: { canonical: "/research" },
+  openGraph: {
+    title: "Research — Genesis Genetics",
+    description: "Educational research overviews on peptides and research compounds — mechanisms, handling, and storage. Research use only.",
+    url: "/research",
+  },
 };
 
 export default async function ResearchIndexPage() {

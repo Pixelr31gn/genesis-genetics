@@ -10,6 +10,12 @@ export const metadata = {
   title: "Quality Control Standards for Research Compounds | Genesis Genetics",
   description:
     "How Genesis Genetics verifies identity, purity, and batch consistency for every research compound — supplier qualification, HPLC testing, and release criteria explained.",
+  alternates: { canonical: "/quality-control" },
+  openGraph: {
+    title: "Quality Control Standards for Research Compounds | Genesis Genetics",
+    description: "How Genesis Genetics verifies identity, purity, and batch consistency for every research compound — supplier qualification, HPLC testing, and release criteria explained.",
+    url: "/quality-control",
+  },
 };
 
 const FAQ_ITEMS = [

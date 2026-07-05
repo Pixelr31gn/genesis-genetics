@@ -11,6 +11,12 @@ export const metadata = {
   title: "Regeneration Research Compounds | Genesis Genetics",
   description:
     "Browse Genesis Genetics' Regeneration category — research peptides studied for tissue, skin, and recovery-related research applications, each with HPLC-verified purity.",
+  alternates: { canonical: "/categories/regeneration" },
+  openGraph: {
+    title: "Regeneration Research Compounds | Genesis Genetics",
+    description: "Browse Genesis Genetics' Regeneration category — research peptides studied for tissue, skin, and recovery-related research applications, each with HPLC-verified purity.",
+    url: "/categories/regeneration",
+  },
 };
 
 const FAQ_ITEMS = [
