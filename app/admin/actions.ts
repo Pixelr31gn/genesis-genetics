@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { put } from "@vercel/blob";
+import sharp from "sharp";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import {
   createPost,
@@ -51,11 +51,12 @@ function readProductInput(formData: FormData): ProductInput {
 async function uploadProductImage(formData: FormData): Promise<string | null> {
   const file = formData.get("imageFile");
   if (!(file instanceof File) || file.size === 0) return null;
-  const blob = await put(`products/${crypto.randomUUID()}-${file.name}`, file, {
-    access: "public",
-    contentType: file.type || "application/octet-stream",
-  });
-  return blob.url;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const compressed = await sharp(buffer)
+    .resize(800, 1000, { fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+  return `data:image/jpeg;base64,${compressed.toString("base64")}`;
 }
 
 function readRelatedIds(formData: FormData): number[] {
