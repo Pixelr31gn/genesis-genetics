@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getPosts, getProducts } from "@/lib/db";
+import { TOPICS } from "@/lib/topics";
+import { FAMILIES } from "@/lib/families";
 
 const BASE_URL = "https://genesisgenetics.io";
 
@@ -15,8 +17,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/certificate-of-analysis`, changeFrequency: "monthly", priority: 0.6, lastModified: now },
     { url: `${BASE_URL}/shipping-cold-chain`, changeFrequency: "monthly", priority: 0.6, lastModified: now },
     { url: `${BASE_URL}/categories/regeneration`, changeFrequency: "weekly", priority: 0.7, lastModified: now },
+    { url: `${BASE_URL}/topics`, changeFrequency: "monthly", priority: 0.85, lastModified: now },
     { url: `${BASE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
+
+  const topicRoutes: MetadataRoute.Sitemap = TOPICS.map((t) => ({
+    url: `${BASE_URL}/topics/${t.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+    lastModified: now,
+  }));
+
+  const familyRoutes: MetadataRoute.Sitemap = FAMILIES.map((f) => ({
+    url: `${BASE_URL}/family/${f.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+    lastModified: now,
+  }));
 
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${BASE_URL}/compounds/${p.slug}`,
@@ -32,5 +49,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...productRoutes, ...postRoutes];
+  return [...staticRoutes, ...topicRoutes, ...familyRoutes, ...productRoutes, ...postRoutes];
 }

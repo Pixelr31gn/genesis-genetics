@@ -73,6 +73,26 @@ export default async function ResearchIndexPage() {
         )}
       </section>
 
+      {/* TOPICS HUB LINK */}
+      <section className="px-6 pb-12 max-w-6xl mx-auto border-t border-white/5 pt-12">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-white/35 mb-4">
+          Compound Research Overviews
+        </p>
+        <Link
+          href="/topics"
+          className="group inline-flex items-center gap-3 border border-white/10 rounded-2xl bg-white/[0.02] px-6 py-4 hover:border-[#00FF41]/30 transition"
+        >
+          <div>
+            <p className="font-medium text-white/75 group-hover:text-[#00FF41] transition">
+              Browse All 15 Compound Topics →
+            </p>
+            <p className="text-sm text-white/35 mt-0.5">
+              Mechanism · Applications · Literature — BPC-157, TB-500, Semax, SS-31, and more
+            </p>
+          </div>
+        </Link>
+      </section>
+
       <Footer />
     </main>
   );

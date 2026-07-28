@@ -15,6 +15,7 @@ import {
 } from "@/lib/db";
 import { getDiscountedPrice, isDiscountActive } from "@/lib/pricing";
 import { isLikelyBot } from "@/lib/bot-detect";
+import { getTopicBySlug } from "@/lib/topics";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,8 @@ export default async function CompoundPage({
     getPostsForProduct(product.id),
     headers(),
   ]);
+
+  const topic = getTopicBySlug(slug);
 
   if (!isLikelyBot(headerList.get("user-agent"))) {
     recordProductInterestEvent(product.id, "detail_view").catch(() => {});
@@ -192,6 +195,24 @@ export default async function CompoundPage({
           </div>
         </section>
       ) : null}
+
+      {topic && (
+        <section className="px-6 pb-10 max-w-6xl mx-auto">
+          <Link
+            href={`/topics/${slug}`}
+            className="group inline-flex items-center gap-4 border border-white/10 rounded-2xl bg-white/[0.02] px-6 py-4 hover:border-[#00FF41]/30 transition"
+          >
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#00FF41]/50 mb-1">
+                Research Overview
+              </p>
+              <p className="text-sm text-white/70 group-hover:text-white/90 transition">
+                {topic.name} — Mechanism, Applications &amp; Literature Summary →
+              </p>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {related.length > 0 ? (
         <section className="px-6 pb-28 max-w-6xl mx-auto">
