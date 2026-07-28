@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -35,7 +36,7 @@ export async function generateMetadata({
       title: `${product.name} — Genesis Genetics`,
       description: desc,
       url: `/compounds/${slug}`,
-      images: product.image_url ? [{ url: product.image_url, alt: product.name }] : [],
+      images: [{ url: `/products/${slug}.png`, alt: product.name }],
     },
   };
 }
@@ -78,7 +79,7 @@ export default async function CompoundPage({
     "@type": "Product",
     name: product.name,
     description: product.description || undefined,
-    image: product.image_url || undefined,
+    image: `/products/${slug}.png`,
     brand: { "@type": "Brand", name: "Genesis Genetics" },
     category: product.category,
     offers: {
@@ -105,13 +106,14 @@ export default async function CompoundPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* IMAGE */}
           <div className="relative aspect-[4/5] rounded-[28px] overflow-hidden border border-white/10 bg-white/[0.03]">
-            {product.image_url ? (
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : null}
+            <Image
+              src={`/products/${slug}.png`}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           </div>
 
@@ -166,7 +168,6 @@ export default async function CompoundPage({
                 slug={product.slug}
                 name={product.name}
                 price={discountedPrice ?? Number(product.price)}
-                imageUrl={product.image_url}
               />
             </div>
           </div>

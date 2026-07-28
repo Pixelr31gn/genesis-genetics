@@ -10,19 +10,18 @@ export default function AddToCartControls({
   slug,
   name,
   price,
-  imageUrl,
 }: {
   productId: number;
   slug: string;
   name: string;
   price: number;
-  imageUrl: string | null;
 }) {
   const cart = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const imageUrl = `/products/${slug}.png`;
 
   // show sticky bar when the inline controls scroll out of view
   useEffect(() => {

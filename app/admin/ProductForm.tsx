@@ -1,5 +1,4 @@
 import type { Product } from "@/lib/db";
-import ImageField from "./ImageField";
 
 export default function ProductForm({
   action,
@@ -107,12 +106,6 @@ export default function ProductForm({
           site. US Eastern is UTC-4 right now, e.g. 11:59pm ET = 3:59am UTC
           the next day.
         </p>
-      </Field>
-
-      <Field label="Image">
-        <ImageField
-          currentImageUrl={product?.image_url ?? null}
-        />
       </Field>
 
       <Field label="Description">

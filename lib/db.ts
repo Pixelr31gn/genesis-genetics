@@ -17,7 +17,6 @@ export type Product = {
   dosage: string | null;
   purity: string | null;
   price: number;
-  image_url: string | null;
   description: string | null;
   stock: number;
   sort_order: number;
@@ -63,7 +62,7 @@ async function generateUniqueSlug(name: string, excludeId?: number): Promise<str
 
 export async function getProducts(): Promise<Product[]> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
+    SELECT id, name, slug, category, dosage, purity, price, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     ORDER BY sort_order ASC, created_at DESC
   `;
@@ -72,7 +71,7 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProductById(id: number): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
+    SELECT id, name, slug, category, dosage, purity, price, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     WHERE id = ${id}
   `;
@@ -81,7 +80,7 @@ export async function getProductById(id: number): Promise<Product | null> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const rows = await sql`
-    SELECT id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
+    SELECT id, name, slug, category, dosage, purity, price, description, stock, sort_order, discount_percent, discount_expires_at, created_at
     FROM products
     WHERE slug = ${slug}
   `;
@@ -97,8 +96,7 @@ export async function setProductOrder(orderedIds: number[]): Promise<void> {
 }
 
 export async function createProduct(
-  data: ProductInput,
-  imageUrl: string | null
+  data: ProductInput
 ): Promise<Product> {
   const slug = await generateUniqueSlug(data.name);
   const [{ next_order }] = await sql`
@@ -106,52 +104,34 @@ export async function createProduct(
   `;
   const rows = await sql`
     INSERT INTO products
-      (name, slug, category, dosage, purity, price, description, stock, discount_percent, discount_expires_at, sort_order, image_url)
+      (name, slug, category, dosage, purity, price, description, stock, discount_percent, discount_expires_at, sort_order)
     VALUES
-      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${data.discount_percent}, ${data.discount_expires_at}, ${next_order}, ${imageUrl})
-    RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
+      (${data.name}, ${slug}, ${data.category}, ${data.dosage}, ${data.purity}, ${data.price}, ${data.description}, ${data.stock}, ${data.discount_percent}, ${data.discount_expires_at}, ${next_order})
+    RETURNING id, name, slug, category, dosage, purity, price, description, stock, sort_order, discount_percent, discount_expires_at, created_at
   `;
   return rows[0] as Product;
 }
 
 export async function updateProduct(
   id: number,
-  data: ProductInput,
-  imageUrl: string | null
+  data: ProductInput
 ): Promise<Product> {
   const slug = await generateUniqueSlug(data.name, id);
-  const rows = imageUrl
-    ? await sql`
-        UPDATE products
-        SET name = ${data.name},
-            slug = ${slug},
-            category = ${data.category},
-            dosage = ${data.dosage},
-            purity = ${data.purity},
-            price = ${data.price},
-            description = ${data.description},
-            stock = ${data.stock},
-            discount_percent = ${data.discount_percent},
-            discount_expires_at = ${data.discount_expires_at},
-            image_url = ${imageUrl}
-        WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
-      `
-    : await sql`
-        UPDATE products
-        SET name = ${data.name},
-            slug = ${slug},
-            category = ${data.category},
-            dosage = ${data.dosage},
-            purity = ${data.purity},
-            price = ${data.price},
-            description = ${data.description},
-            stock = ${data.stock},
-            discount_percent = ${data.discount_percent},
-            discount_expires_at = ${data.discount_expires_at}
-        WHERE id = ${id}
-        RETURNING id, name, slug, category, dosage, purity, price, image_url, description, stock, sort_order, discount_percent, discount_expires_at, created_at
-      `;
+  const rows = await sql`
+    UPDATE products
+    SET name = ${data.name},
+        slug = ${slug},
+        category = ${data.category},
+        dosage = ${data.dosage},
+        purity = ${data.purity},
+        price = ${data.price},
+        description = ${data.description},
+        stock = ${data.stock},
+        discount_percent = ${data.discount_percent},
+        discount_expires_at = ${data.discount_expires_at}
+    WHERE id = ${id}
+    RETURNING id, name, slug, category, dosage, purity, price, description, stock, sort_order, discount_percent, discount_expires_at, created_at
+  `;
   return rows[0] as Product;
 }
 
@@ -165,7 +145,7 @@ export async function deleteProduct(id: number): Promise<void> {
 
 export async function getRelatedProducts(productId: number): Promise<Product[]> {
   const rows = await sql`
-    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
     FROM related_products rp
     JOIN products p ON p.id = rp.related_id
     WHERE rp.product_id = ${productId}
@@ -292,7 +272,7 @@ export async function deletePost(id: number): Promise<void> {
 
 export async function getProductsForPost(postId: number): Promise<Product[]> {
   const rows = await sql`
-    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
+    SELECT p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at
     FROM post_products pp
     JOIN products p ON p.id = pp.product_id
     WHERE pp.post_id = ${postId}
@@ -646,7 +626,7 @@ export async function getProductInterestRanking(days = 30): Promise<ProductInter
       GROUP BY oi.product_id
     )
     SELECT
-      p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price, p.image_url,
+      p.id, p.name, p.slug, p.category, p.dosage, p.purity, p.price,
       p.description, p.stock, p.sort_order, p.discount_percent, p.discount_expires_at, p.created_at,
       COALESCE(e.views, 0) AS views,
       COALESCE(e.hovers, 0) AS hovers,

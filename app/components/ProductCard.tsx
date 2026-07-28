@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   motion,
@@ -75,7 +76,7 @@ export default function ProductCard({
         slug: product.slug,
         name: product.name,
         price: discountedPrice ?? Number(product.price),
-        imageUrl: product.image_url,
+        imageUrl: `/products/${product.slug}.png`,
       },
       quantity
     );
@@ -115,9 +116,7 @@ export default function ProductCard({
         >
           {/* thumbnail */}
           <div className="relative w-[68px] h-[68px] rounded-xl overflow-hidden shrink-0 bg-white/[0.04]">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-            ) : null}
+            <Image src={`/products/${product.slug}.png`} alt={product.name} fill className="object-cover" sizes="68px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             {hasDiscount ? (
               <span className="absolute bottom-1 left-0 right-0 flex justify-center">
@@ -188,15 +187,13 @@ export default function ProductCard({
 
             {/* IMAGE */}
             <div className="relative aspect-[1/1] overflow-hidden">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="absolute inset-0 w-full h-full object-cover scale-105 transition-transform duration-700 ease-out group-hover:scale-115"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-white/[0.03]" />
-              )}
+              <Image
+                src={`/products/${product.slug}.png`}
+                alt={product.name}
+                fill
+                className="object-cover scale-105 transition-transform duration-700 ease-out group-hover:scale-115"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 

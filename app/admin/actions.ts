@@ -47,11 +47,6 @@ function readProductInput(formData: FormData): ProductInput {
   };
 }
 
-function uploadProductImage(formData: FormData): string | null {
-  const url = String(formData.get("imageUrl") || "").trim();
-  return url || null;
-}
-
 function readRelatedIds(formData: FormData): number[] {
   return formData.getAll("relatedIds").map((v) => Number(v));
 }
@@ -77,8 +72,7 @@ function readRelatedPostIds(formData: FormData): number[] {
 
 export async function createProductAction(formData: FormData) {
   await requireSession();
-  const imageUrl = await uploadProductImage(formData);
-  const product = await createProduct(readProductInput(formData), imageUrl);
+  const product = await createProduct(readProductInput(formData));
   await setRelatedProducts(product.id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");
@@ -88,8 +82,7 @@ export async function createProductAction(formData: FormData) {
 export async function updateProductAction(formData: FormData) {
   await requireSession();
   const id = Number(formData.get("id"));
-  const imageUrl = await uploadProductImage(formData);
-  await updateProduct(id, readProductInput(formData), imageUrl);
+  await updateProduct(id, readProductInput(formData));
   await setRelatedProducts(id, readRelatedIds(formData));
   revalidatePath("/");
   revalidatePath("/admin");

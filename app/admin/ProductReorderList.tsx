@@ -81,15 +81,11 @@ export default function ProductReorderList({
                   ⠿
                 </div>
                 <div className="w-10">
-                  {p.image_url ? (
-                    <img
-                      src={p.image_url}
-                      alt={p.name}
-                      className="h-10 w-10 rounded-lg object-cover border border-white/10"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-lg border border-white/10 bg-white/[0.03]" />
-                  )}
+                  <img
+                    src={`/products/${p.slug}.png`}
+                    alt={p.name}
+                    className="h-10 w-10 rounded-lg object-cover border border-white/10"
+                  />
                 </div>
                 <div className="flex-1 px-5 text-sm">
                   {p.name}
