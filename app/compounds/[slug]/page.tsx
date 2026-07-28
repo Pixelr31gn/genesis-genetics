@@ -37,7 +37,7 @@ export async function generateMetadata({
       title: `${product.name} — Genesis Genetics`,
       description: desc,
       url: `/compounds/${slug}`,
-      images: [{ url: `/products/${slug}.png`, alt: product.name }],
+      images: [{ url: `https://genesisgenetics.io/products/${slug}.png`, alt: product.name }],
     },
   };
 }
@@ -77,23 +77,32 @@ export default async function CompoundPage({
       ? "Low Stock"
       : "In Stock";
 
+  const BASE = "https://genesisgenetics.io";
+  const productDescription =
+    product.description ||
+    `${product.name} research compound — ${product.purity ?? "high purity"}, for laboratory and research use only. Not for human or veterinary use.`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || undefined,
-    image: `/products/${slug}.png`,
+    description: productDescription,
+    image: `${BASE}/products/${slug}.png`,
+    url: `${BASE}/compounds/${slug}`,
+    sku: slug,
     brand: { "@type": "Brand", name: "Genesis Genetics" },
     category: product.category,
     offers: {
       "@type": "Offer",
       priceCurrency: "USD",
-      price: String(discountedPrice ?? Number(product.price)),
+      price: (discountedPrice ?? Number(product.price)).toFixed(2),
+      url: `${BASE}/compounds/${slug}`,
       availability:
         product.stock === 0
           ? "https://schema.org/OutOfStock"
           : "https://schema.org/InStock",
-      seller: { "@type": "Organization", name: "Genesis Genetics" },
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: "Genesis Genetics", url: BASE },
     },
   };
 
